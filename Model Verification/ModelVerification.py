@@ -9,7 +9,6 @@ def model_setup(STUDENTS, COURSES, schedule1, schedule2, schedule3):
 	creating variables, adding the assignment constraint.
 	Returns (in the following order): model instance, variable dictionary"""
 
-
 	m = Model("Verification")
 
 	# Create Variables
