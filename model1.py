@@ -181,7 +181,7 @@ class ScheduleModel:
 		if self.m.getStatus() != "optimal":
 			print("The problem is", self.m.getStatus())
 		else:
-			print("Found Optimal Solution:")
+			print("\nFound Optimal Solution:")
 			for i in range(len(self.STUDENTS)):
 				for j in [1,2,3]:
 					v = self.m.getVal(self.X[i,j])
