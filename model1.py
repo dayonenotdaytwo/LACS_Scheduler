@@ -261,7 +261,7 @@ class ScheduleModel:
 						
 
 
-			print("Assigned", first_choices, "to top choice", second_choices, "to second, and",
+			print("Assigned", first_choices, "to top choice;", second_choices, "to second; and",
 				third_choices, "to the third choice")
 
 			print("\nBreakdown by Grade:")
@@ -274,9 +274,44 @@ class ScheduleModel:
 				num_third = grade_third_choices[grade]
 				print(str(grade) + "\t\t" + str(num_first) + "\t" +
 					str(num_second) + "\t" + str(num_third))
+			print("\n")
 
-			
 
+	def track(self):
+		"""Unlike describe, this is used to track the output of the model, it will return values
+		that can be used to track metrics for the sensitivity analysis"""
+
+		# initilize highlevel tracker
+		first_choices = 0
+		second_choices = 0
+		third_choices = 0
+
+		# Initialize grade level tracker
+		grade_first_choices = {}
+		grade_second_choices = {}
+		grade_third_choices = {}
+		for i in range(5,13):
+			grade_first_choices[i] = 0
+			grade_second_choices[i] = 0
+			grade_third_choices[i] = 0
+
+		# record solution
+		for i in range(len(self.STUDENTS)): # iterate over first X index
+			for j in [1,2,3]: # iterate over second X index
+				v = self.m.getVal(self.X[i,j]) # value of variable (either 1 or 0)
+				if v == 1: # i.e. if assigned
+					grade = int(self.GRADES[i]) # this students grade
+					if j == 1:
+						first_choices += 1 # high level tally
+						grade_first_choices[grade] = grade_first_choices[grade] + 1 # tally by grade
+					elif j == 2:
+						second_choices += 1
+						grade_second_choices[grade] = grade_second_choices[grade] + 1
+					else:
+						third_choices += 1
+						grade_third_choices[grade] = grade_third_choices[grade] + 1
+
+		return [first_choices, second_choices, third_choices], grade_first_choices, grade_second_choices, grade_third_choices
 
 
 
@@ -288,9 +323,60 @@ if __name__=="__main__":
 	GRADES = read_grade_data("Resources/Grades.csv", STUDENTS)
 	#print(COURSES)
 
-	s = ScheduleModel(s1, s2, s3, STUDENTS, COURSES, MAX, GRADES)
-	s.set_objective([3,2,1])
-	s.set_assignment_cons()
-	s.set_max_cons()
-	s.solve()
-	s.describe_solution()
+	# check if you would like the run the basic test, i.e. just run the model per normal
+	# if you say no will launch into a sensitivity check
+	run_test = input("Run Test? (yes or no): ")
+	if run_test == "yes":
+		s = ScheduleModel(s1, s2, s3, STUDENTS, COURSES, MAX, GRADES)
+		s.set_objective([3,2,1])
+		s.set_assignment_cons()
+		s.set_max_cons()
+		s.solve()
+		s.describe_solution()
+		quit() # terminate program
+
+	# not testing, so run sensitivity check
+	import matplotlib.pyplot as plt
+	# first test is on first assignment weights
+	# the relevant test is changing distance between them
+	# lets first focus on distance between first and second, i.e. vary the 3 from 2.1 to 4 by .1
+	
+	# initialize trackers
+	first = []
+	second = []
+	third = []
+	first_grade = {}
+	second_grade = {}
+	third_grade = {}
+	for g in range(5,13):
+		first_grade[int(g)] = []
+		second_grade[int(g)] = []
+		third_grade[int(g)] = []
+
+	for x in np.arange(2.1, 4.1, 0.1):
+		s = ScheduleModel(s1, s2, s3, STUDENTS, COURSES, MAX, GRADES)
+		s.set_objective([x,2,1])
+		s.set_assignment_cons()
+		s.set_max_cons()
+		s.solve()
+		[f, s, t], fc, sc, tc = s.track()
+		print(f,s,t)
+
+		# add results of this run to the trackers
+		first.append(f)
+		second.append(s)
+		third.append(t)
+		for g in range(5,13):
+			first_grade[g].append(fc[g])
+			second_grade[g].append(sc[g])
+			third_grade[g].append(tc[g])
+
+	# plot the results
+	plt.plot(np.arange(2.1, 4.1, 0.1), first, color='blue')
+	plt.plot(np.arange(2.1, 4.1, 0.1), second, color='red')
+	plt.plot(np.arange(2.1, 4.1, 0.1), third, color = 'green')
+	plt.xlabel("Value on first weight")
+	plt.legend()
+	plt.show()
+
+
