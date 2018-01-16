@@ -83,6 +83,23 @@ def read_MAX_data(file_name):
 
 	return MAX
 
+def read_grade_data(file_name, STUDENTS):
+	"""Reads .csv file with two columns, the first is the uinque student identifier, the 
+	second is the grade of that student, also takes in STUDENTS so we get same ID
+	Returns a dictionary of student ID to grade"""
+
+	gdf = pd.read_csv(file_name, header=None)
+	key = gdf[gdf.columns[0]] # student ID column
+	grades = gdf[gdf.columns[1]] # Grade column
+	
+	GRADES = {}
+	i = 0
+	for s in STUDENTS:
+	    GRADES[s] = grades[i] # doing this key so that it matches with STUDENTS
+	    i += 1
+
+	return GRADES
+
 
 
 class ScheduleModel:
@@ -99,12 +116,13 @@ class ScheduleModel:
 	X			Dictionary of model varialbes. There are 3 variables per student
 					each binary, representing whether or not that student
 					was assigned his or her, first, second, or third choice
+	GRADES		Dicionary of unique student ID to that students grade
 
 	methods:
 
 	"""
 
-	def __init__(self, s1, s2, s3, STUDENTS, COURSES, MAX):
+	def __init__(self, s1, s2, s3, STUDENTS, COURSES, MAX, GRADES):
 		"""takes in data (mostly from read_preference_data function), sets fields, and 
 		initilaizes the pyscipopt model instance, as well as adds the variables"""
 
@@ -119,6 +137,7 @@ class ScheduleModel:
 		self.STUDENTS = STUDENTS
 		self.COURSES = COURSES
 		self.MAX = MAX
+		self.GRADES = GRADES
 
 		# Create appopriate number of variables
 		self.X = {}
@@ -130,17 +149,48 @@ class ScheduleModel:
 
 	#TODO Think about how you are going to deal with max sizes for tinkering
 
-	def set_objective(self, weight_list):
+	def set_objective(self, weight_list, grade_dict=None):
 		"""Takes in a list of weights "weight_list" that is the weights on which schedule
 		a student is assigned, e.g. [3,2,1] would award 3 points when a student gets their first
-		choice schedule. Sets the objective associated with self.m"""
+		choice schedule. grade_dict is an optional input, if given, it must have an entry for each
+		different grade, i.e. 5 to 12 which maps to a weight. This weight puts a reward on giving
+		an individual in that grade their first choice schedule (and weight-1 for their second choice)
+		Sets the objective associated with self.m"""
 
 		first = weight_list[0]
 		second = weight_list[1]
 		third = weight_list[2]
 
+		# Deal with grades
+		## I will make another dictionary that maps seniors and 8th graders
+		## to 2 pts, while everyone else to 1 points
+
+
+		if grade_dict == None:
+			# make own dictionary basic weights
+			## I will make another dictionary that maps seniors and 8th graders
+			## to 2 pts, while everyone else to 1 points
+			grade_dict = {}
+			for s in self.GRADES:
+				if self.GRADES[s] == 8 or self.GRADES[s] == 12:
+					grade_dict[s] = 2
+				elif self.GRADES[s] == 7 or self.GRADES[s] == 11:
+					grade_dict[s] = 1
+				else:
+					grade_dict[s] = 0
+		else:
+			# a dictionary is provided, verify that it has enough entries
+			if len(grade_dict)==8:
+				for g in [5,6,7,8,9,10,11,12]:
+					if g not in grade_dict:
+						raise ValueError("Dictionary does not have correct values")
+				print("User specified grade weight dictionary is valid")
+
+
+		# Add objective to model
 		self.m.setObjective(quicksum(first*self.X[s,1] + second*self.X[s,2] + third*self.X[s,3]
-						 for s in self.STUDENTS), "maximize")
+						 for s in self.STUDENTS) + 
+							quicksum(grade_dict[s]*self.X[s,1] for s in self.STUDENTS), "maximize")
 
 		print("Objective Set")
 
@@ -178,34 +228,55 @@ class ScheduleModel:
 		second_choices = 0
 		third_choices = 0
 
+		# initilize dictionary to keep track of choices by grade
+		grade_first_choices = {}
+		grade_second_choices = {}
+		grade_third_choices = {}
+
+		for i in range(5,13):
+			grade_first_choices[i] = 0
+			grade_second_choices[i] = 0
+			grade_third_choices[i] = 0
+
 		if self.m.getStatus() != "optimal":
 			print("The problem is", self.m.getStatus())
 		else:
 			print("\nFound Optimal Solution:")
 			for i in range(len(self.STUDENTS)):
 				for j in [1,2,3]:
-					v = self.m.getVal(self.X[i,j])
+					v = self.m.getVal(self.X[i,j]) # value of variable (either 1 or 0)
 					if v == 1:
+						grade = int(self.GRADES[i]) # this students grade
 						if j == 1:
-							first_choices += 1
+							first_choices += 1 # high level tally
+							grade_first_choices[grade] = grade_first_choices[grade] + 1 # tally by grade
 						elif j == 2:
 							second_choices += 1
+							grade_second_choices[grade] = grade_second_choices[grade] + 1
 						else:
 							third_choices += 1
-						#print(self.STUDENTS[i], "assigned to choice", str(j))
+							grade_third_choices[grade] = grade_third_choices[grade] + 1
 						Results[self.STUDENTS[i]] = j
+
+						
+
 
 			print("Assigned", first_choices, "to top choice", second_choices, "to second, and",
 				third_choices, "to the third choice")
 
-			# assignment_dict = {1:self.s1, 2:self.s2, 3:self.s3}
-			# for s in Results:
-			# 	snum = int(s[-1]) -1# row number in schedule table
-			# 	assignment = Results[s] # points to which schedule 
-			# 	enrollments = np.add(enrollments, assignment_dict[assignment][snum])
-			# print("\n")
-			# for i in range(len(enrollments)):
-			# 	print("Course", str(i+1), "has", str(int(enrollments[i])), "students enrolled")
+			print("\nBreakdown by Grade:")
+			print("Grade\t\tFirst\tSecond\tThird")
+			for grade in grade_first_choices:
+				print("-"*40)
+				# get choice distribution for given grade
+				num_first = grade_first_choices[grade]
+				num_second = grade_second_choices[grade]
+				num_third = grade_third_choices[grade]
+				print(str(grade) + "\t\t" + str(num_first) + "\t" +
+					str(num_second) + "\t" + str(num_third))
+
+			
+
 
 
 
@@ -214,9 +285,10 @@ if __name__=="__main__":
 	s1, s2, s3, STUDENTS, COURSES = read_preference_data("Resources/FirstChoiceBinary.csv", 
 		"Resources/SecondChoiceBinary.csv", "Resources/ThirdChoiceBinary.csv")
 	MAX = read_MAX_data("Resources/CourseSize.csv")
+	GRADES = read_grade_data("Resources/Grades.csv", STUDENTS)
 	#print(COURSES)
 
-	s = ScheduleModel(s1, s2, s3, STUDENTS, COURSES, MAX)
+	s = ScheduleModel(s1, s2, s3, STUDENTS, COURSES, MAX, GRADES)
 	s.set_objective([3,2,1])
 	s.set_assignment_cons()
 	s.set_max_cons()
