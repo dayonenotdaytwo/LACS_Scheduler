@@ -1,1 +1,92 @@
-,0,Size0,P1_Pre-Calculus,251,P1_French B,252,P1_HS English (TBA),253,P1_Facing History,254,P1_Middle School Social Studies with Dan,255,P1_Advanced Algebra & Trigonometry,256,P1_7th-8th Grade Art,257,P1_Constitutional Law/Government,258,P1_MS Health,259,P1_Algebra A,2510,P1_Other,2511,P1_Portfolio Photo,2512,P1_Spanish A,2513,P1_HS PE,2514,P1_Evolutionary Biology,2515,P2_Intermediate Spanish,2516,P2_Facing History,2517,P2_MS Social Studies with Dan,2518,P2_Geology,2519,P2_Algebra A,2520,P2_HS English (TBA),2521,P2_Other,2522,P2_HS PE,2523,P2_Asia Studies,2524,P2_Drawing & Painting,2525,P2_Spanish B,2526,P2_Intermediate Algebra & Geometry,2527,P2_8th Grade Science,2528,P2_Intermediate French,2529,P3_MS/HS PE,2530,P3_Story of Life,2531,P3_Intermediate Spanish,2532,P3_Beginning Algebra and Geometry,2533,P3_Algebra B,2534,P3_Studio Art,2535,P3_Other,2536,P3_American Studies/Global Perspective,2537,P3_Banned Books,2538,P3_I Know Some Things,2539,P3_Advanced Spanish,2540,P3_Chemistry,2541,P3_Music Design,2542,P3_HS Health,2543,"P4_Music, Myth, and Ritual",2544,P4_Intro to Physics & Chemistry,2545,P4_Advanced/In-Depth French,2546,P4_Intermediate Algebra and Geometry,2547,P4_Algebra A,2548,P4_Economics,2549,P4_MS/HS PE,2550,P4_Other,2551,P4_American Studies/Global Perspective,2552,P4_Portfolio Art,2553,P4_Researchers (8th Grade SS),2554,P4_Beginning Algebra and Trigonometry,2555,P4_MS Science (TBA),2556,P4_Community Service Class,1557,P7_Celtic Band,2558,P7_Advanced Algebra & Trigonometry,2559,P7_African Studies,2560,P7_English Seminar,2561,P7_Molecular Biology,2462,P7_MS English & Social Studies (TBA),2563,P7_Video Production,1264,P7_Poet's Society,2565,P7_Anatomy & Physiology,2566,P7_Adaptive PE,2567,P7_Spanish A,2568,P7_Other,2569,P7_Latin American Studies,2570,P7_US History & Lit: The 20th Century,2571,P7_Spanish B,2572,P7_MS/HS PE,2573,P8_Dark Fiction,2574,P8_Ecology,2575,P8_African Studies,2576,P8_In-Depth Spanish,2577,P8_Probability & Statistics,2578,P8_Algebra B,2579,P8_MS PE,2580,P8_French A,2581,P8_Choir,2582,P8_MS English & Social Studies,2583,P8_MS Chemistry,2584,P8_Computer Literacy,2585,P8_Latin American Studies,2586,P8_PE,2587,P8_US History & Lit: The 20th Century,2588,P8_HS PE,2589,P8_Other,2590,P8_Fiber Tech,25
+,0,Size
+0,P1_Pre-Calculus,22
+1,P1_French B,22
+2,P1_HS English (TBA),22
+3,P1_Facing History,22
+4,P1_Middle School Social Studies with Dan,22
+5,P1_Advanced Algebra & Trigonometry,22
+6,P1_7th-8th Grade Art,16
+7,P1_Constitutional Law/Government,22
+8,P1_MS Health,22
+9,P1_Algebra A,22
+10,P1_Other,100
+11,P1_Portfolio Photo,16
+12,P1_Spanish A,22
+13,P1_HS PE,50
+14,P1_Evolutionary Biology,100
+15,P2_Intermediate Spanish,22
+16,P2_Facing History,22
+17,P2_MS Social Studies with Dan,22
+18,P2_Geology,22
+19,P2_Algebra A,22
+20,P2_HS English (TBA),22
+21,P2_Other,100
+22,P2_HS PE,30
+23,P2_Asia Studies,22
+24,P2_Drawing & Painting,16
+22,P2_Spanish B,22
+26,P2_Intermediate Algebra & Geometry,22
+27,P2_8th Grade Science,22
+28,P2_Intermediate French,22
+29,P3_MS/HS PE,50
+30,P3_Story of Life,22
+31,P3_Intermediate Spanish,22
+32,P3_Beginning Algebra and Geometry,22
+33,P3_Algebra B,22
+34,P3_Studio Art,16
+35,P3_Other,100
+36,P3_American Studies/Global Perspective,22
+37,P3_Banned Books,22
+38,P3_I Know Some Things,22
+39,P3_Advanced Spanish,22
+40,P3_Chemistry,22
+41,P3_Music Design,12
+42,P3_HS Health,22
+43,"P4_Music, Myth, and Ritual",22
+44,P4_Intro to Physics & Chemistry,22
+45,P4_Advanced/In-Depth French,22
+46,P4_Intermediate Algebra and Geometry,22
+47,P4_Algebra A,22
+48,P4_Economics,22
+49,P4_MS/HS PE,50
+50,P4_Other,100
+51,P4_American Studies/Global Perspective,22
+52,P4_Portfolio Art,16
+53,P4_Researchers (8th Grade SS),22
+54,P4_Beginning Algebra and Trigonometry,22
+55,P4_MS Science (TBA),22
+56,P4_Community Service Class,15
+57,P7_Celtic Band,22
+58,P7_Advanced Algebra & Trigonometry,22
+59,P7_African Studies,22
+60,P7_English Seminar,22
+61,P7_Molecular Biology,50
+62,P7_MS English & Social Studies (TBA),22
+63,P7_Video Production,12
+64,P7_Poet's Society,22
+65,P7_Anatomy & Physiology,22
+66,P7_Adaptive PE,50
+67,P7_Spanish A,22
+68,P7_Other,100
+69,P7_Latin American Studies,22
+70,P7_US History & Lit: The 20th Century,22
+71,P7_Spanish B,22
+72,P7_MS/HS PE,50
+73,P8_Dark Fiction,22
+74,P8_Ecology,22
+75,P8_African Studies,22
+76,P8_In-Depth Spanish,22
+77,P8_Probability & Statistics,22
+78,P8_Algebra B,22
+79,P8_MS PE,50
+80,P8_French A,22
+81,P8_Choir,50
+82,P8_MS English & Social Studies,22
+83,P8_MS Chemistry,22
+84,P8_Computer Literacy,22
+85,P8_Latin American Studies,22
+86,P8_PE,50
+87,P8_US History & Lit: The 20th Century,22
+88,P8_HS PE,50
+89,P8_Other,100
+90,P8_Fiber Tech,12
