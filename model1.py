@@ -8,6 +8,7 @@ sensitivity testing"""
 from pyscipopt import Model, quicksum
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 
 import sys
 import os
@@ -238,10 +239,14 @@ class ScheduleModel:
 			grade_second_choices[i] = 0
 			grade_third_choices[i] = 0
 
+		# Verify that solution is optimal
 		if self.m.getStatus() != "optimal":
 			print("The problem is", self.m.getStatus())
 		else:
+			# Given that it is optimal, gather the stats
 			print("\nFound Optimal Solution:")
+
+			## Determine number of each choice given out
 			for i in range(len(self.STUDENTS)):
 				for j in [1,2,3]:
 					v = self.m.getVal(self.X[i,j]) # value of variable (either 1 or 0)
@@ -258,12 +263,11 @@ class ScheduleModel:
 							grade_third_choices[grade] = grade_third_choices[grade] + 1
 						Results[self.STUDENTS[i]] = j
 
-						
-
-
+			# Print the number of each choice given out
 			print("Assigned", first_choices, "to top choice;", second_choices, "to second; and",
 				third_choices, "to the third choice")
 
+			# Collect a breakdown of first, second, thid choices by grade
 			print("\nBreakdown by Grade:")
 			print("Grade\t\tFirst\tSecond\tThird")
 			for grade in grade_first_choices:
@@ -274,7 +278,68 @@ class ScheduleModel:
 				num_third = grade_third_choices[grade]
 				print(str(grade) + "\t\t" + str(num_first) + "\t" +
 					str(num_second) + "\t" + str(num_third))
+			print("-"*40)
 			print("\n")
+
+			# Get Course capactities and sizes for output
+			# print("\nCourse Capacity:")
+			# print("Course" + 34*" " + "Size\tCap")
+			# print(55*"-")
+			# class_sizes = np.zeros(len(self.COURSES))
+			# for j in range(len(self.COURSES)):
+			# 	num_enrolled = 0
+			# 	for i in range(len(self.STUDENTS)):
+			# 		num_enrolled += (self.m.getVal(self.X[i,1])*self.s1[i,j] +
+			# 						self.m.getVal(self.X[i,2])*self.s2[i,j] + 
+			# 						self.m.getVal(self.X[i,3])*self.s3[i,j])
+			# 	name = self.COURSES[j]
+			# 	first_space = (40-len(name))*" "
+			# 	cap = self.MAX[self.COURSES[j]]
+			# 	#print(self.COURSES[j], , num_enrolled, "/", self.MAX[self.COURSES[j]])
+			# 	print(name + first_space + str(int(num_enrolled)) + "\t" + str(cap))
+			# 	print(55*"-")
+			# 	class_sizes[j] = num_enrolled
+
+			## Breakdown courses by number of each grade type enrolled
+			print("\n\nCourse Enrollment by Grade")
+			print("Course" + 34*" " + "\t5th\t6th\t7th\t8th\t9th\t10th\t11th\t12th\t|Total\tCapacity")
+			print(130*"-")
+			for j in range(len(self.COURSES)):
+				# intialize grade count dict for each class
+				d = {}
+				for g in [5,6,7,8,9,10,11,12]:
+					d[g] = 0
+
+				for i in range(len(self.STUDENTS)):
+					# check if this student enrolled in this class
+					# note, the following is either 1 or 0
+					enrolled = (self.m.getVal(self.X[i,1])*self.s1[i,j] +
+									self.m.getVal(self.X[i,2])*self.s2[i,j] + 
+									self.m.getVal(self.X[i,3])*self.s3[i,j])
+					# add to dictionary for correct grade
+					d[self.GRADES[i]] += enrolled
+				
+				name = self.COURSES[j]
+				first_space = (40 - len(name))*" "
+				s = name + first_space
+				total = 0 # the total number enrolled in the course
+				for g in [5,6,7,8,9,10,11,12]:
+					s += "\t" + str(int(d[g]))
+					total += int(d[g])
+				# add total and capacity to the string
+				cap = self.MAX[self.COURSES[j]]
+				s += "\t|" + str(total) + "\t" + str(cap)
+				print(s)
+				print(130*"-")
+
+
+
+			# Make a histogram of course sizes
+			# plt.hist(class_sizes, bins=30)
+			# plt.title("Course Size Histogram")
+			# plt.xlabel("Course Size")
+			# plt.ylabel("Count")
+			# plt.show()
 
 
 	def track(self):
@@ -325,7 +390,8 @@ if __name__=="__main__":
 
 	# check if you would like the run the basic test, i.e. just run the model per normal
 	# if you say no will launch into a sensitivity check
-	run_test = input("Run Test? (yes or no): ")
+	#run_test = input("Run Test? (yes or no): ")
+	run_test = "yes"
 	if run_test == "yes":
 		s = ScheduleModel(s1, s2, s3, STUDENTS, COURSES, MAX, GRADES)
 		s.set_objective([3,2,1])
@@ -379,4 +445,22 @@ if __name__=="__main__":
 	plt.legend()
 	plt.show()
 
+	# plot for each grade
+	for grade in range(5,13):
+		plt.plot(np.arange(2.1, 4.1, 0.1), first_grade[grade], label=str(grade))
+	plt.title("First Choices")
+	plt.legend()
+	plt.show()
+
+	for grade in range(5,13):
+		plt.plot(np.arange(2.1, 4.1, 0.1), second_grade[grade], label=str(grade))
+	plt.title("Second Choices")
+	plt.legend()
+	plt.show()
+
+	for grade in range(5,13):
+		plt.plot(np.arange(2.1, 4.1, 0.1), third_grade[grade], label=str(grade))
+	plt.title("Third Choices")
+	plt.legend()
+	plt.show()
 
