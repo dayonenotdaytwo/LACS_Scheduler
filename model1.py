@@ -222,12 +222,16 @@ class ScheduleModel:
 		self.m.optimize()
 		print("Solve Completed")
 
-	def describe_solution(self):
+	def describe_solution(self, heatmap_filename="Heatmap_enrollments_test.png", 
+		text_file_name="output_test.txt"):
 		"""Describe the solution"""
 		Results = {}
 		first_choices = 0
 		second_choices = 0
 		third_choices = 0
+
+		# text file to save description output
+		f = open(text_file_name, "w")
 
 		# initilize dictionary to keep track of choices by grade
 		grade_first_choices = {}
@@ -264,22 +268,30 @@ class ScheduleModel:
 						Results[self.STUDENTS[i]] = j
 
 			# Print the number of each choice given out
-			print("Assigned", first_choices, "to top choice;", second_choices, "to second; and",
-				third_choices, "to the third choice")
+			s = ("Assigned " + str(first_choices) + " to top choice; " + str(second_choices) +
+				 " to second; and " + str(third_choices) +  " to the third choice")
+			print(s)
+			f.write(s) ## write to file
 
 			# Collect a breakdown of first, second, thid choices by grade
 			print("\nBreakdown by Grade:")
+			f.write("\n\nBreakdown by Grade:")
 			print("Grade\t\tFirst\tSecond\tThird")
+			f.write("\nGrade\t\tFirst\tSecond\tThird")
 			for grade in grade_first_choices:
 				print("-"*40)
+				f.write("\n"+"-"*40)
 				# get choice distribution for given grade
 				num_first = grade_first_choices[grade]
 				num_second = grade_second_choices[grade]
 				num_third = grade_third_choices[grade]
-				print(str(grade) + "\t\t" + str(num_first) + "\t" +
+				s = (str(grade) + "\t\t" + str(num_first) + "\t" +
 					str(num_second) + "\t" + str(num_third))
+				print(s)
+				f.write("\n" + s)
 			print("-"*40)
 			print("\n")
+			f.write("\n" + "-"*40 + "\n")
 
 			# Get Course capactities and sizes for output
 			# print("\nCourse Capacity:")
@@ -301,9 +313,19 @@ class ScheduleModel:
 			# 	class_sizes[j] = num_enrolled
 
 			## Breakdown courses by number of each grade type enrolled
-			print("\n\nCourse Enrollment by Grade")
+			print("\nCourse Enrollment by Grade")
 			print("Course" + 34*" " + "\t5th\t6th\t7th\t8th\t9th\t10th\t11th\t12th\t|Total\tCapacity")
 			print(130*"-")
+
+			# write above
+			f.write("\n\nCourse Enrollment by Grade")
+			f.write("\nCourse" + 34*" " + "\t5th\t6th\t7th\t8th\t9th\t10th\t11th\t12th\t|Total\tCapacity")
+			f.write("\n" + 130*"-")
+
+			# Track data for heat map
+			data = np.zeros([len(self.COURSES), 8]) # courses by grade levels
+
+
 			for j in range(len(self.COURSES)):
 				# intialize grade count dict for each class
 				d = {}
@@ -318,6 +340,9 @@ class ScheduleModel:
 									self.m.getVal(self.X[i,3])*self.s3[i,j])
 					# add to dictionary for correct grade
 					d[self.GRADES[i]] += enrolled
+
+					# add to data matrix
+					data[j, int(self.GRADES[i]-5)] += enrolled # the -5 so that we translate grades to indicies
 				
 				name = self.COURSES[j]
 				first_space = (40 - len(name))*" "
@@ -331,6 +356,24 @@ class ScheduleModel:
 				s += "\t|" + str(total) + "\t" + str(cap)
 				print(s)
 				print(130*"-")
+				f.write("\n" + s)
+				f.write("\n" + 130*"-")
+
+			f.close() # close the output text file
+
+			# Make heat map of data
+			plt.figure(figsize=(12,15)) # height by width
+			plt.title("Course Assignments by Grade")
+			plt.xlabel("Grade")
+			plt.xticks(np.arange(.5,8.5,1), [str(i) + "th" for i in range(5,13)])
+			ylim = len(self.COURSES)
+			plt.yticks(np.arange(.5,ylim+.5,1), self.COURSES.values(), fontsize=7)
+			plt.gca().invert_yaxis()
+			c = plt.pcolor(data, cmap="plasma", edgecolors="white")
+			plt.colorbar(c)
+			plt.tight_layout()
+			plt.savefig(heatmap_filename, dpi=500)
+			# plt.show()
 
 
 
@@ -390,77 +433,128 @@ if __name__=="__main__":
 
 	# check if you would like the run the basic test, i.e. just run the model per normal
 	# if you say no will launch into a sensitivity check
-	#run_test = input("Run Test? (yes or no): ")
-	run_test = "yes"
+	run_test = input("Run Test? (yes or no): ")
+	#run_test = "yes"
 	if run_test == "yes":
 		s = ScheduleModel(s1, s2, s3, STUDENTS, COURSES, MAX, GRADES)
-		s.set_objective([3,2,1])
+		s.set_objective([1000000,500,1])
 		s.set_assignment_cons()
 		s.set_max_cons()
 		s.solve()
 		s.describe_solution()
 		quit() # terminate program
 
-	# not testing, so run sensitivity check
-	import matplotlib.pyplot as plt
-	# first test is on first assignment weights
-	# the relevant test is changing distance between them
-	# lets first focus on distance between first and second, i.e. vary the 3 from 2.1 to 4 by .1
-	
-	# initialize trackers
-	first = []
-	second = []
-	third = []
-	first_grade = {}
-	second_grade = {}
-	third_grade = {}
-	for g in range(5,13):
-		first_grade[int(g)] = []
-		second_grade[int(g)] = []
-		third_grade[int(g)] = []
 
-	for x in np.arange(2.1, 4.1, 0.1):
+	print("Will give, and save, output for 3 different models, with " +
+		"\n3 different weights for selections: [3,2,1], [10000, 50, 1], [10000000, 500, 1]")
+	weights = [[3,2,1], [10000, 50, 1], [10000000, 500, 1]]
+	for w in weights:
 		s = ScheduleModel(s1, s2, s3, STUDENTS, COURSES, MAX, GRADES)
-		s.set_objective([x,2,1])
+		s.set_objective(w) # specify the weight to be used
 		s.set_assignment_cons()
 		s.set_max_cons()
 		s.solve()
-		[f, s, t], fc, sc, tc = s.track()
-		print(f,s,t)
+		heatmap_filename = "heatmap_" + str(w) + "png"
+		text_file_name = "text_" + str(w) +".txt"
+		s.describe_solution(heatmap_filename=heatmap_filename, text_file_name=text_file_name)
 
-		# add results of this run to the trackers
-		first.append(f)
-		second.append(s)
-		third.append(t)
-		for g in range(5,13):
-			first_grade[g].append(fc[g])
-			second_grade[g].append(sc[g])
-			third_grade[g].append(tc[g])
+	# end script
+	quit()
 
-	# plot the results
-	plt.plot(np.arange(2.1, 4.1, 0.1), first, color='blue')
-	plt.plot(np.arange(2.1, 4.1, 0.1), second, color='red')
-	plt.plot(np.arange(2.1, 4.1, 0.1), third, color = 'green')
-	plt.xlabel("Value on first weight")
-	plt.legend()
-	plt.show()
 
-	# plot for each grade
-	for grade in range(5,13):
-		plt.plot(np.arange(2.1, 4.1, 0.1), first_grade[grade], label=str(grade))
-	plt.title("First Choices")
-	plt.legend()
-	plt.show()
 
-	for grade in range(5,13):
-		plt.plot(np.arange(2.1, 4.1, 0.1), second_grade[grade], label=str(grade))
-	plt.title("Second Choices")
-	plt.legend()
-	plt.show()
 
-	for grade in range(5,13):
-		plt.plot(np.arange(2.1, 4.1, 0.1), third_grade[grade], label=str(grade))
-	plt.title("Third Choices")
-	plt.legend()
-	plt.show()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+##############################################################################################
+##############################################################################################
+
+#								"main" code for sensitivity testings
+
+##############################################################################################
+##############################################################################################
+
+
+
+	# # not testing, so run sensitivity check
+	# import matplotlib.pyplot as plt
+	# # first test is on first assignment weights
+	# # the relevant test is changing distance between them
+	# # lets first focus on distance between first and second, i.e. vary the 3 from 2.1 to 4 by .1
+	
+	# # initialize trackers
+	# first = []
+	# second = []
+	# third = []
+	# first_grade = {}
+	# second_grade = {}
+	# third_grade = {}
+	# for g in range(5,13):
+	# 	first_grade[int(g)] = []
+	# 	second_grade[int(g)] = []
+	# 	third_grade[int(g)] = []
+
+	# for x in np.arange(2.1, 4.1, 0.1):
+	# 	s = ScheduleModel(s1, s2, s3, STUDENTS, COURSES, MAX, GRADES)
+	# 	s.set_objective([x,2,1])
+	# 	s.set_assignment_cons()
+	# 	s.set_max_cons()
+	# 	s.solve()
+	# 	[f, s, t], fc, sc, tc = s.track()
+	# 	print(f,s,t)
+
+	# 	# add results of this run to the trackers
+	# 	first.append(f)
+	# 	second.append(s)
+	# 	third.append(t)
+	# 	for g in range(5,13):
+	# 		first_grade[g].append(fc[g])
+	# 		second_grade[g].append(sc[g])
+	# 		third_grade[g].append(tc[g])
+
+	# # plot the results
+	# plt.plot(np.arange(2.1, 4.1, 0.1), first, color='blue')
+	# plt.plot(np.arange(2.1, 4.1, 0.1), second, color='red')
+	# plt.plot(np.arange(2.1, 4.1, 0.1), third, color = 'green')
+	# plt.xlabel("Value on first weight")
+	# plt.legend()
+	# plt.show()
+
+	# # plot for each grade
+	# for grade in range(5,13):
+	# 	plt.plot(np.arange(2.1, 4.1, 0.1), first_grade[grade], label=str(grade))
+	# plt.title("First Choices")
+	# plt.legend()
+	# plt.show()
+
+	# for grade in range(5,13):
+	# 	plt.plot(np.arange(2.1, 4.1, 0.1), second_grade[grade], label=str(grade))
+	# plt.title("Second Choices")
+	# plt.legend()
+	# plt.show()
+
+	# for grade in range(5,13):
+	# 	plt.plot(np.arange(2.1, 4.1, 0.1), third_grade[grade], label=str(grade))
+	# plt.title("Third Choices")
+	# plt.legend()
+	# plt.show()
 
