@@ -182,7 +182,7 @@ class ScheduleModel:
 		else:
 			# a dictionary is provided, verify that it has enough entries
 			if len(grade_dict)==8:
-				for g in [5,6,7,8,9,10,11,12]:
+				for g in [-1, 5,6,7,8,9,10,11,12]:
 					if g not in grade_dict:
 						raise ValueError("Dictionary does not have correct values")
 				print("User specified grade weight dictionary is valid")
@@ -238,7 +238,8 @@ class ScheduleModel:
 		grade_second_choices = {}
 		grade_third_choices = {}
 
-		for i in range(5,13):
+		#for i in range(5,13):
+		for i in [-1,5,6,7,8,9,10,11,12]:
 			grade_first_choices[i] = 0
 			grade_second_choices[i] = 0
 			grade_third_choices[i] = 0
@@ -322,14 +323,23 @@ class ScheduleModel:
 			f.write("\nCourse" + 34*" " + "\t5th\t6th\t7th\t8th\t9th\t10th\t11th\t12th\t|Total\tCapacity")
 			f.write("\n" + 130*"-")
 
+			# find 6thGradeOther and ignore for the hatmaps
+			other_indicies = []
+			for i in range(len(self.COURSES)):
+				if "6thGradeOther" in self.COURSES[i]:
+					other_indicies.append(i)
+			num_rows = len(self.COURSES) - len(other_indicies) # for data matrix
+			iter_list = list(set(range(len(self.COURSES))) - set(other_indicies))
+
 			# Track data for heat map
 			data = np.zeros([len(self.COURSES), 8]) # courses by grade levels
+			#data = np.zeros([num_rows, 8]) # courses by grade levels
 
 
 			for j in range(len(self.COURSES)):
 				# intialize grade count dict for each class
 				d = {}
-				for g in [5,6,7,8,9,10,11,12]:
+				for g in [-1, 5,6,7,8,9,10,11,12]:
 					d[g] = 0
 
 				for i in range(len(self.STUDENTS)):
@@ -343,7 +353,8 @@ class ScheduleModel:
 
 					# add to data matrix
 					data[j, int(self.GRADES[i]-5)] += enrolled # the -5 so that we translate grades to indicies
-				
+
+
 				name = self.COURSES[j]
 				first_space = (40 - len(name))*" "
 				s = name + first_space
@@ -359,6 +370,11 @@ class ScheduleModel:
 				f.write("\n" + s)
 				f.write("\n" + 130*"-")
 
+			# drop the 6th grade rows 
+			#print(iter_list)
+			data = data[iter_list, :]
+			course_labels = np.array(list(self.COURSES.values()))[iter_list]
+
 			f.close() # close the output text file
 
 			# Make heat map of data
@@ -366,8 +382,10 @@ class ScheduleModel:
 			plt.title("Course Assignments by Grade")
 			plt.xlabel("Grade")
 			plt.xticks(np.arange(.5,8.5,1), [str(i) + "th" for i in range(5,13)])
-			ylim = len(self.COURSES)
-			plt.yticks(np.arange(.5,ylim+.5,1), self.COURSES.values(), fontsize=7)
+			#ylim = len(self.COURSES)
+			ylim = len(course_labels)
+			#plt.yticks(np.arange(.5,ylim+.5,1), self.COURSES.values(), fontsize=7)
+			plt.yticks(np.arange(.5,ylim+.5,1), course_labels, fontsize=7)
 			plt.gca().invert_yaxis()
 			c = plt.pcolor(data, cmap="plasma", edgecolors="white")
 			plt.colorbar(c)
