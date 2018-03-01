@@ -102,8 +102,8 @@ MIN = courses["Min"]
 MAX = courses["Max"]
 
 # To check feasibility:
-MIN = [0]*len(C)
-MAX = [100]*len(C)
+#MIN = [0]*len(C)
+#MAX = [100]*len(C)
 
 
 
@@ -259,8 +259,6 @@ print "\tWorking on Room constraints"
 # Define r  room variable (over course j in room r durring period t)
 Rv = {}
 for j in range(len(C)):
-    # except for the "other" and "empty courses
-    #if "Other" not in Cd[j] or "Empty" not in Cd[j]:
     for s in R:
         for t in T:
             name = "Course " + str(j) + " in room " + str(s) + " durring period " + str(t)
@@ -272,7 +270,6 @@ print "Room Variables added"
 # If course taught, gets one room
 print R
 for j in range(len(C)):
-	#if "Other" not in Cd[j] or "Empty" not in Cd[j]:
     for t in T:
         m.addConstr(quicksum(Rv[j,s,t] for s in R) == Course[j,t])
 
@@ -282,6 +279,13 @@ for s in R:
 	for t in T:
 		m.addConstr(quicksum(Rv[j,s,t] for j in range(len(Cd))) <= 1)
 # --------------------------------------------------------------
+
+## -----------------------	test -----------------------------
+# course gets at most one room per period
+# for j in Cd:
+# 	for t in T:
+# 		m.addConstr(quicksum(Rv[j,s,t] for s in R) <= 1)
+#-------------------------------------------------------------
 
 # # Force "Other" courses in specific periods
 other_indicies = []
@@ -313,27 +317,15 @@ print(str(num_cons), "Constraints")
 print("-"*20 + "Optimization Starting" + "-"*20)
 m.optimize() # NOTE: solver info printed to terminal
 
-# test output with Gurobi
-# Print courses in each period
-# print "\n\n"
-# for t in T:
-# 	print "PERIOD " + str(t) + " " + "-"*30
-# 	for j in range(len(C)):
-# 		var = Course[j,t]
-# 		var_name = var.VarName
-# 		returned = m.getVarByName(var_name)
-# 		val = returned.X
-# 		if val ==1 :
-# 			print Cd[j]
-# 	print "\n"
 
 def get_value(var):
 	"""
 	Takes in a variable instance, and returns its value
 	"""
-	var_name = var.VarName
-	returned = m.getVarByName(var_name)
-	return returned.X
+	# var_name = var.VarName
+	# returned = m.getVarByName(var_name)
+	# return returned.X
+	return var.X
 
 def get_enrollment(course):
 	"""
@@ -346,6 +338,17 @@ def get_enrollment(course):
 		if XV[i,course] == 1:
 			num_enrolled += 1
 	return num_enrolled
+
+def get_teacher(course):
+	"""
+	Takes in a course ID and retunrs the teachers name
+	"""
+	for k in range(len(I)):
+		if Ta[k][course] == 1:
+			return I[k]
+	# if no teacher (other, or empty)
+	return ""
+
 
 # Save all variable values
 XV = {}
@@ -362,6 +365,7 @@ for j in range(len(C)):
 	for s in R:
 		for t in T:
 			RoomV[j,s,t] = get_value(Rv[j,s,t])
+			#RoomV[j,s,t] = Rv[j,s,t].X
 
 
 # By just period
@@ -377,15 +381,21 @@ for t in T:
 # By period and Room
 print "\n\n"
 for t in T:
-	print "-"*20 + " " + "PERIOD " + str(t) + " " + "-"*20
-	print "Room" + 36*" " + "Course"
-	print "-"*48
-	for s in R:
-		for j in range(len(C)):
-			if RoomV[j,s,t] == 1 and CourseV[j,t] == 1:
-				num_enrolled = get_enrollment(j)
-				print s + (40 - len(s))*"." + Cd[j] + (40 - len(Cd[j])*"." + str(num_enrolled))
+	print "-"*20 + " " + "PERIOD " + str(t) + " " + "-"*110
+	print "Room" + 36*" " + "Course" + 34*" " + "Enrollment" + " "*(40 - len("Enrollment")) + "Teacher"
+	print "-"*140
+	for j in range(len(C)):
+		# if the course is offered
+		if CourseV[j,t] == 1:
+			# figure out which room
+			for s in R:
+				if RoomV[j,s,t] == 1:
+					num_enrolled = get_enrollment(j)
+					print s + (40 - len(s))*"." + Cd[j] + (40 - len(Cd[j]))*"." \
+						+ str(num_enrolled) + "."*(40 - len(str(num_enrolled))) + get_teacher(j)
 	print "\n"
+
+
 
 # Get enrollment totals:
 print "\n\n"
