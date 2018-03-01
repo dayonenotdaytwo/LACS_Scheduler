@@ -174,7 +174,7 @@ for i in S:
             m.addConstr(Course[j,t] >= U[i,j,t])
             num_cons += 1
 
-print "AND constraint added"
+print "\tAND constraint added"
 
 
 
@@ -209,7 +209,7 @@ for subject in Subjects:
 
 
 
-print "Proximity constraint added"
+print "\tProximity constraint added"
 # Teacher teaching at most one course per period
 for k in range(len(I)):
     for t in T:
@@ -253,9 +253,9 @@ for i in S:
             m.addConstr(X[i,j+1] == X[i,j]) # this was >= but == is better?
             num_cons += 1
 
-print "Double period constraint added"
+print "\tDouble period constraint added"
 
-print "Working on Room constraints"
+print "\tWorking on Room constraints"
 # Define r  room variable (over course j in room r durring period t)
 Rv = {}
 for j in range(len(C)):
@@ -275,6 +275,13 @@ for j in range(len(C)):
 	#if "Other" not in Cd[j] or "Empty" not in Cd[j]:
     for t in T:
         m.addConstr(quicksum(Rv[j,s,t] for s in R) == Course[j,t])
+
+## -------------	NEW CONSTRAINT (IS NEEDED) -----------------
+# Room gets at most one course per period
+for s in R:
+	for t in T:
+		m.addConstr(quicksum(Rv[j,s,t] for j in range(len(Cd))) <= 1)
+# --------------------------------------------------------------
 
 # # Force "Other" courses in specific periods
 other_indicies = []
@@ -308,18 +315,100 @@ m.optimize() # NOTE: solver info printed to terminal
 
 # test output with Gurobi
 # Print courses in each period
+# print "\n\n"
+# for t in T:
+# 	print "PERIOD " + str(t) + " " + "-"*30
+# 	for j in range(len(C)):
+# 		var = Course[j,t]
+# 		var_name = var.VarName
+# 		returned = m.getVarByName(var_name)
+# 		val = returned.X
+# 		if val ==1 :
+# 			print Cd[j]
+# 	print "\n"
+
+def get_value(var):
+	"""
+	Takes in a variable instance, and returns its value
+	"""
+	var_name = var.VarName
+	returned = m.getVarByName(var_name)
+	return returned.X
+
+def get_enrollment(course):
+	"""
+	takes in a course index corrseponding to a course in Cd
+	and returns the number of students enrolled
+	Note: Assumes the variable value dictionaries have already been defined
+	"""
+	num_enrolled = 0
+	for i in S:
+		if XV[i,course] == 1:
+			num_enrolled += 1
+	return num_enrolled
+
+# Save all variable values
+XV = {}
+CourseV = {}
+for i in S:
+	for j in range(len(C)):
+		# get student variable
+		XV[i,j] = get_value(X[i,j])
+		for t in T:
+			CourseV[j,t] = get_value(Course[j,t])
+# get rooms
+RoomV = {}
+for j in range(len(C)):
+	for s in R:
+		for t in T:
+			RoomV[j,s,t] = get_value(Rv[j,s,t])
+
+
+# By just period
 print "\n\n"
 for t in T:
 	print "PERIOD " + str(t) + " " + "-"*30
 	for j in range(len(C)):
-		var = Course[j,t]
-		var_name = var.VarName
-		returned = m.getVarByName(var_name)
-		val = returned.X
-		if val ==1 :
+		if CourseV[j,t] ==1 :
 			print Cd[j]
 	print "\n"
 
+
+# By period and Room
+print "\n\n"
+for t in T:
+	print "-"*20 + " " + "PERIOD " + str(t) + " " + "-"*20
+	print "Room" + 36*" " + "Course"
+	print "-"*48
+	for s in R:
+		for j in range(len(C)):
+			if RoomV[j,s,t] == 1 and CourseV[j,t] == 1:
+				num_enrolled = get_enrollment(j)
+				print s + (40 - len(s))*"." + Cd[j] + (40 - len(Cd[j])*"." + str(num_enrolled))
+	print "\n"
+
+# Get enrollment totals:
+print "\n\n"
+print "Course " + (40 -len("Course"))*" " + " Enrolled"
+print "-"*50
+for j in Cd:
+    num = 0
+    for i in S:
+        if XV[i,j] == 1:
+            num += 1
+    print Cd[j] + (40 - len(Cd[j]))*"." + str(num)
+
+
+# Print teachers by period (to ensure no doubles)
+teacher_list = list(I_C_dict.keys())
+for t in T:
+    print "PERIOD " + str(t) + " " + "-"*30
+    for j in Cd:
+        if CourseV[j,t]==1:
+            for k in range(len(I)):
+                if Ta[k][j] == 1:
+                    print I[k]
+    print "\n"     
 
 
 ## OUTPUT FORMATTED FOR SCIP
