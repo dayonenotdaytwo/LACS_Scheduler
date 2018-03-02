@@ -16,6 +16,7 @@ courses = pd.read_csv("Resources/FlatCourseSize.csv")
 #prox = pd.read_csv("Resources/Proximity.csv")
 prox = pd.read_csv("Resources/Proximity.csv")
 teacher = pd.read_csv("Resources/Teacher_Info.csv", header=None)
+course_rooms = pd.read_csv("Resources/CourseRoomReqs.csv")
 
 # clean it up
 prefs.rename(columns={"Unnamed: 0": "Student"}, inplace=True)
@@ -67,6 +68,35 @@ Ta = np.array(Teacher_Course_Matrix[1:]) # matrix tying teachers to courses they
 # Room Data (we will eventually need to tie this to subject, i.e. for science?)
 R = ["U1", "Steve", "U2", "U3", "U4/5", "U7", "U7", "L2", "L3", "Library", "Art", "L4", 
         "L6", "Sci A", "Sci B", "Sci C", "Music Room", "Gym", "Gym2", "OtherRoom", "EmptyRoom"]
+
+
+#------------------------------------------------------------
+#------------------------------------------------------------
+
+# Department Courses
+Science_Rooms = ["Sci A", "Sci B", "Sci C"]
+Art_Rooms = ["Art"]
+Gym_Rooms = ["Gym", "Gym2"]
+Music_Rooms = ["Music Room"]
+Free_Rooms = list( set(R) - set(Science_Rooms + Art_Rooms + Gym_Rooms +
+	Music_Rooms))
+
+Science_Courses = course_rooms["Science"]
+Art_Courses = course_rooms["Art"]
+Gym_Courses = course_rooms["Gym"]
+Music_Courses = course_rooms["Music"]
+Free_Courses = course_rooms["Free"]
+
+room_constrained_subjects = ["Science", "Art", "Music", "Gym"]
+constrained_rooms = {"Science":Science_Rooms, "Art":Art_Rooms, 
+	"Music":Music_Rooms, "Gym":Gym_Rooms, "Free":Free_Rooms}
+constrained_courses = {"Science":Science_Courses, "Art":Art_Courses,
+	"Music":Music_Courses, "Gym":Gym_Courses, "Free":Free_Courses}
+
+#------------------------------------------------------------
+#------------------------------------------------------------
+
+
 # Test with way more rooms
 # R = []
 # for i in range(500):
@@ -311,6 +341,22 @@ for j in Cd:
         
 for i in range(len(T)):
     m.addConstr(Course[other_indicies[i], T[i]] == 1)
+
+#-------------------------------------------------------------
+#-------------------------------------------------------------
+# force subject constrained courses into appropriate rooms
+for subject in room_constrained_subjects:
+	sub_courses = constrained_courses[subject] # coruses in this subject
+	sub_rooms = constrained_rooms[subject] # appropriate rooms
+	for j in Cd:
+		if sub_courses[j] == 1: # if course is in subject
+			for t in T:
+				m.addConstr(quicksum(Rv[j,s,t] for s in sub_rooms) == Course[j,t])
+#-------------------------------------------------------------
+#-------------------------------------------------------------
+
+
+
 
 
 # Set objective
