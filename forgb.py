@@ -102,7 +102,7 @@ MIN = courses["Min"]
 MAX = courses["Max"]
 
 # To check feasibility:
-#MIN = [0]*len(C)
+MIN = [3]*len(C)
 #MAX = [100]*len(C)
 
 
@@ -182,9 +182,8 @@ print "\tAND constraint added"
 for j in range(len(C)):
     m.addConstr(quicksum(X[i,j] for i in S) <= MAX[j])
     #m.addConstr(quicksum(X[i,j] for i in S) <= 100)
-    #m.addCons(quicksum(X[i,j] for i in S) >= 0)
+    #m.addConstr(quicksum(X[i,j] for i in S) >= MIN[j])
     num_cons += 2
-
 
 
 
@@ -259,32 +258,49 @@ print "\tWorking on Room constraints"
 # Define r  room variable (over course j in room r durring period t)
 Rv = {}
 for j in range(len(C)):
-    for s in R:
-        for t in T:
-            name = "Course " + str(j) + " in room " + str(s) + " durring period " + str(t)
-            Rv[j,s,t] = m.addVar(vtype=GRB.BINARY, name=name)
-            num_vars += 1
+	if "Other" not in Cd[j] and "Empty" not in Cd[j]:
+	    for s in R:
+	        for t in T:
+	            name = "Course " + str(j) + " in room " + str(s) + " durring period " + str(t)
+	            Rv[j,s,t] = m.addVar(vtype=GRB.BINARY, name=name)
+	            num_vars += 1
 print "Room Variables added"
 
 
 # If course taught, gets one room
 print R
 for j in range(len(C)):
-    for t in T:
-        m.addConstr(quicksum(Rv[j,s,t] for s in R) == Course[j,t])
+	if "Other" not in Cd[j] and "Empty" not in Cd[j]:
+	    for t in T:
+	        m.addConstr(quicksum(Rv[j,s,t] for s in R) == Course[j,t])
 
 ## -------------	NEW CONSTRAINT (IS NEEDED) -----------------
 # Room gets at most one course per period
+# make set of course indicies without Other and Empty
+c_mini = []
+for j in Cd:
+	if "Other" not in Cd[j] and "Empty" not in Cd[j]:
+		c_mini.append(j)
 for s in R:
 	for t in T:
-		m.addConstr(quicksum(Rv[j,s,t] for j in range(len(Cd))) <= 1)
+		# m.addConstr(quicksum(Rv[j,s,t] for j in range(len(Cd))) <= 1)
+		m.addConstr(quicksum(Rv[j,s,t] for j in c_mini) <= 1)
 # --------------------------------------------------------------
+
+# Double periods in the same room
+for j in Cd:
+	if Db[j] == 1:
+		for t in T:
+			if t != 4 and t != 8:
+				for s in R:
+					m.addConstr(Rv[j,s,t] == Rv[j+1, s, t+1])
+					num_cons += 1
 
 ## -----------------------	test -----------------------------
 # course gets at most one room per period
 # for j in Cd:
 # 	for t in T:
-# 		m.addConstr(quicksum(Rv[j,s,t] for s in R) <= 1)
+# 		m.addConstr(quicksum(Rv[j,s,t] for s in R) <= 1) 
 #-------------------------------------------------------------
 
 # # Force "Other" courses in specific periods
@@ -317,6 +333,16 @@ print(str(num_cons), "Constraints")
 print("-"*20 + "Optimization Starting" + "-"*20)
 m.optimize() # NOTE: solver info printed to terminal
 
+
+
+
+#------------------------------------------------------------
+#------------------------------------------------------------
+#
+###					START RESULT DESCIRPTION
+#
+#------------------------------------------------------------
+#------------------------------------------------------------
 
 def get_value(var):
 	"""
@@ -361,11 +387,18 @@ for i in S:
 			CourseV[j,t] = get_value(Course[j,t])
 # get rooms
 RoomV = {}
-for j in range(len(C)):
+# for j in range(len(C)):
+for j in c_mini:
 	for s in R:
 		for t in T:
 			RoomV[j,s,t] = get_value(Rv[j,s,t])
 			#RoomV[j,s,t] = Rv[j,s,t].X
+
+UV = {}
+for i in S:
+	for j in Cd:
+		for t in T:
+			UV[i,j,t] = get_value(U[i,j,t])
 
 
 # By just period
@@ -384,7 +417,8 @@ for t in T:
 	print "-"*20 + " " + "PERIOD " + str(t) + " " + "-"*110
 	print "Room" + 36*" " + "Course" + 34*" " + "Enrollment" + " "*(40 - len("Enrollment")) + "Teacher"
 	print "-"*140
-	for j in range(len(C)):
+	# for j in range(len(C)):
+	for j in c_mini:
 		# if the course is offered
 		if CourseV[j,t] == 1:
 			# figure out which room
@@ -419,6 +453,16 @@ for t in T:
                 if Ta[k][j] == 1:
                     print I[k]
     print "\n"     
+
+def print_schedule(student):
+	"""
+	takes in the index of a student and prints out their schedule
+	"""
+	for t in T:
+		for j in Cd:
+			if XV[student,j] == 1 and CourseV[j,t] == 1:
+				print "Period " + str(t) + ": " + Cd[j]
+
 
 
 ## OUTPUT FORMATTED FOR SCIP
