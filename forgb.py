@@ -9,6 +9,8 @@ Pulls data from .csv files, organizes it into the appropriate dictionaries,
 lists, and sets. Creates a Gurobi model, adds variables, constraints,
 as well as an objective, then proceeds to solve. Finally, it produces various
 outputs to judge preformance of the model
+
+With Gurobipy THIS MUST BE RUN USING PYTHON 2.7
 """
 
 
@@ -18,10 +20,12 @@ import numpy as np
 import pandas as pd
 from os import system
 import pickle 
+import timeit # just to check setuptie
 
 
 ## to run in interactive use: execfile("forgb.py")
 
+start_time = timeit.default_timer()
 
 # --------------------------------------------------------
 # 						Read Data
@@ -32,6 +36,7 @@ courses = pd.read_csv("Resources/FlatCourseSize.csv")
 prox = pd.read_csv("Resources/Proximity.csv")
 teacher = pd.read_csv("Resources/Teacher_Info.csv", header=None)
 course_rooms = pd.read_csv("Resources/CourseRoomReqs.csv")
+grades = pd.read_csv("Resources/grades.csv", header=None)
 
 # clean it up
 prefs.rename(columns={"Unnamed: 0": "Student"}, inplace=True)
@@ -56,6 +61,9 @@ T = [1,2,3,4,7,8] # Periods
 I = list(set(teacher[0]))
 DW_courses = list(set(teacher[1]))
 
+# Grades for each student
+Grades = grades[1]
+
 # Extract Preferences
 P = prefs.drop("Student", axis=1).as_matrix()
 
@@ -67,8 +75,8 @@ MIN = courses["Min"]
 MAX = courses["Max"]
 
 # To check feasibility:
-#MIN = [3]*len(C)
-#MAX = [100]*len(C)
+# MIN = [3]*len(C)
+# MAX = [100]*len(C)
 
 # Proximity Matrix
 D = prox.drop("0", axis=1).as_matrix()
@@ -110,12 +118,9 @@ Ta = np.array(Teacher_Course_Matrix[1:]) # matrix tying teachers to courses they
 # --------------------------------------------------------
 #					Set up Room Data
 # --------------------------------------------------------
-# Room Data (we will eventually need to tie this to subject, i.e. for science?)
-#R = ["U1", "Steve", "U2", "U3", "U4/5", "U7", "U7", "L2", "L3", "Library", "Art", "L4", 
-#        "L6", "Sci A", "Sci B", "Sci C", "Music Room", "Gym", "Gym2", "OtherRoom", "EmptyRoom"]
-R = ["U1", "Steve", "U2", "U3", "U4/5", "U7", "U7", "L2", "L3", "Library", "Art", "L4", 
+# Set of rooms
+R = ["U1", "Steve", "U2", "U3", "U4/5", "U6", "U7", "L2", "L3", "Library", "Art", "L4", 
         "L6", "Sci A", "Sci B", "Sci C", "Music Room", "Gym", "Gym2"]
-
 
 # Department Courses
 Science_Rooms = ["Sci A", "Sci B", "Sci C"]
@@ -231,12 +236,30 @@ for i in S:
 print "\tU set-up constraints (`and`) added"
 
 
-# must have preffed the course
+# must have preffed the course (minus the requirements)
+# 8th graders must be in Researchers (j=88)
+# 9th Graders in 1 of African Studies (8), or Latrin American Studies (61)
+# 6th Graders in People and Lit (78,80), or Inquiry and Tools (52,54)
 for i in S:
 	for j in Cd:
-		m.addConstr(X[i,j] <= P[i][j])
-		num_cons += 1
-print "\tStudents in courses they prefer"
+		if Grades[i] == 8 and j == 88:
+			pass
+		elif Grades[i] == 9 and (j in [8,9,61,62]):
+			pass
+		elif Grades[i] == 6 and (j in [78,79,80,81, 52,53,54,55]):
+			# so many as these are alternates and doubles
+			pass
+		else:
+			m.addConstr(X[i,j] <= P[i][j])
+			num_cons += 1
+print "\tStudents in courses they prefer" 
+
+g = 0
+for i in S:
+	if Grades[i] == 9:
+		if P[i][8] == 1:
+			g += 1
+
 
 
 # Add capacity and minimum constraint
@@ -256,18 +279,22 @@ print "\tCourse capacity"
 # Setup proximity min and max dicts (temp untill we generate more granular data)
 min_sub_dict = {}
 max_sub_dict = {}
-for subj in Subjects:
-    min_sub_dict[subj] = np.ones(len(S))*0
-    max_sub_dict[subj] = np.ones(len(S))*4
+for subject in Subjects:
+    min_sub_dict[subject] = np.ones(len(S))*0
+    max_sub_dict[subject] = np.ones(len(S))*3 
+    # it works when max is 6 --> I think the constraints are written correctly?
+    # infeasible when 5, very suspicious
 
 
 # # proximity by subject
-for subject in Subjects:
-    for i in S:
-        if min_sub_dict[subject][i] > 0:
-            m.addConstr(quicksum(prox_dict[subject][j]*X[i,j] for j in range(len(C))) >= min_sub_dict[subject][i])
-        # do we always need a max?
-        m.addConstr(quicksum(prox_dict[subject][j]*X[i,j] for j in range(len(C))) <= max_sub_dict[subject][i])
+#for subject in Subjects:
+for subject in ["K", "F", "D", "M", "IIC", "VI", "C", "IV", "IIA", "E", "I",
+			"H", "V", "VII", "Other", "G", "J", "IIB", "L", "IB"]: # test with limited set of subjects, trying to find issue
+	for i in S:
+	    if min_sub_dict[subject][i] > 0:
+	        m.addConstr(quicksum(prox_dict[subject][j]*X[i,j] for j in range(len(C))) >= min_sub_dict[subject][i])
+	    # do we always need a max?
+	    m.addConstr(quicksum(prox_dict[subject][j]*X[i,j] for j in range(len(C))) <= max_sub_dict[subject][i])
 print "\tProximity constraint added"
 
 
@@ -321,6 +348,22 @@ print "\tStudents in both parts of double"
 
 
 #------------------------------------------------------------
+#					Required Courses
+#------------------------------------------------------------
+# 8th graders must be in Researchers (j=88)
+# 9th Graders in 1 of African Studies (8), or Latrin American Studies (61)
+# 6th Graders in People and Lit (78,80), or Inquiry and Tools (52,54)
+for i in S:
+	if Grades[i] == 8:
+		m.addConstr(X[i,88] == 1)
+	if Grades[i] == 9:
+		m.addConstr(X[i,8] + X[i,61] == 1)
+	if Grades[i] == 6:
+		m.addConstr(X[i,78] + X[i,80] + X[i,52] + X[i,54] == 1)
+print "\tGrade level course requirements"
+
+
+#------------------------------------------------------------
 #					Room Constraints
 #------------------------------------------------------------
 # If course taught, gets one room
@@ -365,7 +408,7 @@ print "\tCourses with subject specific room needs accomodated"
 
 
 #-------------------------------------------------------------
-#						`Other` Courses
+#						Period Constraints
 #-------------------------------------------------------------
 # Force "Other" courses in specific periods
 other_indicies = []
@@ -378,7 +421,27 @@ for i in range(len(T)):
 print "\t`Other` courses in each period"
 
 
+# Required Courses in periods 1-4
+# Must be in begning of day 
+for j in [88, 8, 9, 61, 62, 78, 79, 80, 81, 52, 53, 54, 55]:
+#for j in [88, 8, 9, 61, 62]:
+	m.addConstr(quicksum(Course[j, t] for t in [1,2,3,4]) == 1)
+print "\tRequired courses in periods 1 -> 4"
+
+# Concurrance  (People and lit (78,80)) and (Inquire and tools (52, 54))
+for t in T:
+	#m.addConstr(Course[78,t] == Course[80,t]) # ISSUE! <-----------------------------
+	m.addConstr(Course[52,t] == Course[54,t])
+print "Concurrance of Multi-instance courses"
+
+
+
+
+
+
 print "All constraints added"
+
+
 
 
 
@@ -388,8 +451,8 @@ print "All constraints added"
 #						Set Objective
 #-------------------------------------------------------------
 #-------------------------------------------------------------
-print "Setting objective"
 m.setObjective(X[1,1]*0, GRB.MAXIMIZE) # just find a feasible solution
+print "Objective Set"
 
 # try setting a gap
 #m.MIPGap=.05 # 5% is good enough for me
@@ -400,6 +463,8 @@ m.setObjective(X[1,1]*0, GRB.MAXIMIZE) # just find a feasible solution
 # print(str(num_cons), "Constraints")
 
 
+elapsed = timeit.default_timer() - start_time
+print "Model setup in " + str(round(elapsed,3)) + " seconds"
 #-------------------------------------------------------------
 #							Solve
 #-------------------------------------------------------------
@@ -588,9 +653,9 @@ num_disliked = 0
 num_liked = 0
 for i in S:
 	for j in Cd:
-		if XV[i,j] != P[i][j]:
+		if XV[i,j] >= 1 and P[i][j] == 0:
 			num_disliked += 1
-		if XV[i,j] == 1 and P[i][j] == 1:
+		if XV[i,j] >= 1 and P[i][j] >= 1:
 			num_liked += 1
 
 print "Number of dispreffered courses assigned: " + str(num_disliked)
