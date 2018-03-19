@@ -11,6 +11,11 @@ as well as an objective, then proceeds to solve. Finally, it produces various
 outputs to judge preformance of the model
 
 With Gurobipy THIS MUST BE RUN USING PYTHON 2.7
+
+Data note: everytime data is update, you change max sizes for:
+	Other
+	PE
+	8th Grade Researches (it is required for 8th graders)
 """
 
 
@@ -53,8 +58,15 @@ S = prefs["Student"].tolist() # list of all students (once we get ID make dictio
 Cd = {} # Course dictionary
 for i in courses.index:
     Cd[i] = courses["Class"].iloc[i]
+
 C = range(len(Cd))
-    
+
+# Gather "Other Indicies"
+other_indicies = []
+for j in Cd:
+    if "Other" in Cd[j]:
+        other_indicies.append(j)
+
 T = [1,2,3,4,7,8] # Periods
 
 ## Instructors and corerspondence
@@ -76,7 +88,7 @@ MAX = courses["Max"]
 
 # To check feasibility:
 # MIN = [3]*len(C)
-# MAX = [100]*len(C)
+# MAX = [40]*len(C)
 
 # Proximity Matrix
 D = prox.drop("0", axis=1).as_matrix()
@@ -411,11 +423,6 @@ print "\tCourses with subject specific room needs accomodated"
 #						Period Constraints
 #-------------------------------------------------------------
 # Force "Other" courses in specific periods
-other_indicies = []
-for j in Cd:
-    if "Other" in Cd[j]:
-        other_indicies.append(j)
-        
 for i in range(len(T)):
     m.addConstr(Course[other_indicies[i], T[i]] == 1)
 print "\t`Other` courses in each period"
@@ -451,16 +458,28 @@ print "All constraints added"
 #						Set Objective
 #-------------------------------------------------------------
 #-------------------------------------------------------------
-m.setObjective(X[1,1]*0, GRB.MAXIMIZE) # just find a feasible solution
-print "Objective Set"
 
-# try setting a gap
-#m.MIPGap=.05 # 5% is good enough for me
+# Null objective
+# m.setObjective(X[1,1]*0, GRB.MAXIMIZE) # just find a feasible solution
+
+# Set Gap
+m.Params.MIPGap=.3 # 30% <-- I know this is appropriate as have run quite a bit
+print "GAP set"
+
+# Preference objective
 #m.setObjective(quicksum(X[i,j]*P[i][j] for i in S for j in C), GRB.MAXIMIZE)
+
+# Minimize other objective
+m.setObjective(-1*quicksum(X[i,j] for i in S for j in other_indicies), GRB.MAXIMIZE)
+
+
+print "Objective Set"
 
 
 # print(str(num_vars), "Variables")
 # print(str(num_cons), "Constraints")
+
+
 
 
 elapsed = timeit.default_timer() - start_time
@@ -469,7 +488,7 @@ print "Model setup in " + str(round(elapsed,3)) + " seconds"
 #							Solve
 #-------------------------------------------------------------
 # Solve model
-print("-"*20 + "Optimization Starting" + "-"*20)
+print("-"*30 + "Optimization Starting" + "-"*30)
 m.optimize() # NOTE: solver info printed to terminal
 
 
@@ -518,14 +537,32 @@ def get_teacher(course):
 	# if no teacher (other, or empty)
 	return ""
 
+def get_room(course, period):
+	"""
+	Returns string of room that `course` is taugh in durring `period`
+	"""
+	if "Other" in Cd[course] or "Empty" in Cd[course]:
+		return "N/A"
+	for s in R:
+		if RoomV[course, s, period] == 1:
+			return s
+
 def print_schedule(student):
 	"""
 	takes in the index of a student and prints out their schedule
 	"""
+	# Get students grade
+	g = Grades[student]
+	print "Student " + str(student) + " (grade " + str(g) + ")"
+	print "-"*85
 	for t in T:
 		for j in Cd:
 			if XV[student,j] == 1 and CourseV[j,t] == 1:
-				print "Period " + str(t) + ": " + Cd[j]
+				room = get_room(j,t)
+				teacher = get_teacher(j)
+				s1 = "Period " + str(t) + ": " + Cd[j]
+				#print "Period " + str(t) + ": " + Cd[j]
+				print s1 + ((50-len(s1))*".") + room + ((20-len(room))*".") + teacher
 
 #-------------------------------------------------------------
 #						Save Variable Values
@@ -567,6 +604,25 @@ for i in S:
 
 # with open('UVals.pickle', 'wb') as handle:
 #     pickle.dump(UV, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+# with open('CourseVals2.pickle', 'wb') as handle:
+#     pickle.dump(CourseV, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+
+
+## you can open these pickles files with
+# with open('Xvals2.pickle', 'rb') as handle:
+#     XV = pickle.load(handle)
+
+# with open('RoomVals2.pickle', 'rb') as handle:
+#     RoomV = pickle.load(handle)
+
+# with open('UVals2.pickle', 'rb') as handle:
+#     UV = pickle.load(handle)
+
+# with open('CourseVals2.pickle', 'rb') as handle:
+#     CourseV = pickle.load(handle)
+
 
 
 #-------------------------------------------------------------
@@ -640,7 +696,6 @@ for t in T:
 #------------------------------------------------------------
 # print all schedules
 # for i in S:
-# 	print "Student " + str(i)
 # 	print_schedule(i)
 # 	print "\n"
 
@@ -675,7 +730,28 @@ print "Min Enrollment: " + str(min_courses)
 print "Max Enrollment: " + str(max_courses)
 
 
-
+#------------------------------------------------------------
+#				Get a feel for "Other"
+#------------------------------------------------------------
+# Try to figure out how many other's people are enrolled in
+# num_other_enrolled = []
+# many_others = []
+# real_bad = {}
+# for i in S:
+# 	t = 0
+# 	for j in other_indicies:
+# 		t += XV[i,j]
+# 	num_other_enrolled.append(t)
+# 	if t > 2:
+# 		many_others.append(i)
+# 		real_bad[i] = t
+# num_other_enrolled = filter(lambda a: a!= 0, num_other_enrolled)
+# # if you have matplotlib imported:
+# plt.hist(num_other_enrolled, align='left')
+# plt.title("Number 'Other' Enrollments")
+# plt.xlabel("Number of 'Other' Courses")
+# plt.ylabel("Number of Students")
+# plt.show()
 
 
 
