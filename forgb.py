@@ -9,6 +9,13 @@ Pulls data from .csv files, organizes it into the appropriate dictionaries,
 lists, and sets. Creates a Gurobi model, adds variables, constraints,
 as well as an objective, then proceeds to solve. Finally, it produces various
 outputs to judge preformance of the model
+
+With Gurobipy THIS MUST BE RUN USING PYTHON 2.7
+
+Data note: everytime data is update, you change max sizes for:
+	Other
+	PE
+	8th Grade Researches (it is required for 8th graders)
 """
 
 
@@ -18,10 +25,12 @@ import numpy as np
 import pandas as pd
 from os import system
 import pickle 
+import timeit # just to check setuptie
 
 
 ## to run in interactive use: execfile("forgb.py")
 
+start_time = timeit.default_timer()
 
 # --------------------------------------------------------
 # 						Read Data
@@ -32,6 +41,7 @@ courses = pd.read_csv("Resources/FlatCourseSize.csv")
 prox = pd.read_csv("Resources/Proximity.csv")
 teacher = pd.read_csv("Resources/Teacher_Info.csv", header=None)
 course_rooms = pd.read_csv("Resources/CourseRoomReqs.csv")
+grades = pd.read_csv("Resources/grades.csv", header=None)
 
 # clean it up
 prefs.rename(columns={"Unnamed: 0": "Student"}, inplace=True)
@@ -48,13 +58,23 @@ S = prefs["Student"].tolist() # list of all students (once we get ID make dictio
 Cd = {} # Course dictionary
 for i in courses.index:
     Cd[i] = courses["Class"].iloc[i]
+
 C = range(len(Cd))
-    
+
+# Gather "Other Indicies"
+other_indicies = []
+for j in Cd:
+    if "Other" in Cd[j]:
+        other_indicies.append(j)
+
 T = [1,2,3,4,7,8] # Periods
 
 ## Instructors and corerspondence
 I = list(set(teacher[0]))
 DW_courses = list(set(teacher[1]))
+
+# Grades for each student
+Grades = grades[1]
 
 # Extract Preferences
 P = prefs.drop("Student", axis=1).as_matrix()
@@ -67,8 +87,8 @@ MIN = courses["Min"]
 MAX = courses["Max"]
 
 # To check feasibility:
-#MIN = [3]*len(C)
-#MAX = [100]*len(C)
+# MIN = [3]*len(C)
+# MAX = [40]*len(C)
 
 # Proximity Matrix
 D = prox.drop("0", axis=1).as_matrix()
@@ -110,12 +130,9 @@ Ta = np.array(Teacher_Course_Matrix[1:]) # matrix tying teachers to courses they
 # --------------------------------------------------------
 #					Set up Room Data
 # --------------------------------------------------------
-# Room Data (we will eventually need to tie this to subject, i.e. for science?)
-#R = ["U1", "Steve", "U2", "U3", "U4/5", "U7", "U7", "L2", "L3", "Library", "Art", "L4", 
-#        "L6", "Sci A", "Sci B", "Sci C", "Music Room", "Gym", "Gym2", "OtherRoom", "EmptyRoom"]
-R = ["U1", "Steve", "U2", "U3", "U4/5", "U7", "U7", "L2", "L3", "Library", "Art", "L4", 
+# Set of rooms
+R = ["U1", "Steve", "U2", "U3", "U4/5", "U6", "U7", "L2", "L3", "Library", "Art", "L4", 
         "L6", "Sci A", "Sci B", "Sci C", "Music Room", "Gym", "Gym2"]
-
 
 # Department Courses
 Science_Rooms = ["Sci A", "Sci B", "Sci C"]
@@ -231,12 +248,30 @@ for i in S:
 print "\tU set-up constraints (`and`) added"
 
 
-# must have preffed the course
+# must have preffed the course (minus the requirements)
+# 8th graders must be in Researchers (j=88)
+# 9th Graders in 1 of African Studies (8), or Latrin American Studies (61)
+# 6th Graders in People and Lit (78,80), or Inquiry and Tools (52,54)
 for i in S:
 	for j in Cd:
-		m.addConstr(X[i,j] <= P[i][j])
-		num_cons += 1
-print "\tStudents in courses they prefer"
+		if Grades[i] == 8 and j == 88:
+			pass
+		elif Grades[i] == 9 and (j in [8,9,61,62]):
+			pass
+		elif Grades[i] == 6 and (j in [78,79,80,81, 52,53,54,55]):
+			# so many as these are alternates and doubles
+			pass
+		else:
+			m.addConstr(X[i,j] <= P[i][j])
+			num_cons += 1
+print "\tStudents in courses they prefer" 
+
+g = 0
+for i in S:
+	if Grades[i] == 9:
+		if P[i][8] == 1:
+			g += 1
+
 
 
 # Add capacity and minimum constraint
@@ -256,18 +291,22 @@ print "\tCourse capacity"
 # Setup proximity min and max dicts (temp untill we generate more granular data)
 min_sub_dict = {}
 max_sub_dict = {}
-for subj in Subjects:
-    min_sub_dict[subj] = np.ones(len(S))*0
-    max_sub_dict[subj] = np.ones(len(S))*4
+for subject in Subjects:
+    min_sub_dict[subject] = np.ones(len(S))*0
+    max_sub_dict[subject] = np.ones(len(S))*3 
+    # it works when max is 6 --> I think the constraints are written correctly?
+    # infeasible when 5, very suspicious
 
 
 # # proximity by subject
-for subject in Subjects:
-    for i in S:
-        if min_sub_dict[subject][i] > 0:
-            m.addConstr(quicksum(prox_dict[subject][j]*X[i,j] for j in range(len(C))) >= min_sub_dict[subject][i])
-        # do we always need a max?
-        m.addConstr(quicksum(prox_dict[subject][j]*X[i,j] for j in range(len(C))) <= max_sub_dict[subject][i])
+#for subject in Subjects:
+for subject in ["K", "F", "D", "M", "IIC", "VI", "C", "IV", "IIA", "E", "I",
+			"H", "V", "VII", "Other", "G", "J", "IIB", "L", "IB"]: # test with limited set of subjects, trying to find issue
+	for i in S:
+	    if min_sub_dict[subject][i] > 0:
+	        m.addConstr(quicksum(prox_dict[subject][j]*X[i,j] for j in range(len(C))) >= min_sub_dict[subject][i])
+	    # do we always need a max?
+	    m.addConstr(quicksum(prox_dict[subject][j]*X[i,j] for j in range(len(C))) <= max_sub_dict[subject][i])
 print "\tProximity constraint added"
 
 
@@ -321,6 +360,22 @@ print "\tStudents in both parts of double"
 
 
 #------------------------------------------------------------
+#					Required Courses
+#------------------------------------------------------------
+# 8th graders must be in Researchers (j=88)
+# 9th Graders in 1 of African Studies (8), or Latrin American Studies (61)
+# 6th Graders in People and Lit (78,80), or Inquiry and Tools (52,54)
+for i in S:
+	if Grades[i] == 8:
+		m.addConstr(X[i,88] == 1)
+	if Grades[i] == 9:
+		m.addConstr(X[i,8] + X[i,61] == 1)
+	if Grades[i] == 6:
+		m.addConstr(X[i,78] + X[i,80] + X[i,52] + X[i,54] == 1)
+print "\tGrade level course requirements"
+
+
+#------------------------------------------------------------
 #					Room Constraints
 #------------------------------------------------------------
 # If course taught, gets one room
@@ -365,20 +420,35 @@ print "\tCourses with subject specific room needs accomodated"
 
 
 #-------------------------------------------------------------
-#						`Other` Courses
+#						Period Constraints
 #-------------------------------------------------------------
 # Force "Other" courses in specific periods
-other_indicies = []
-for j in Cd:
-    if "Other" in Cd[j]:
-        other_indicies.append(j)
-        
 for i in range(len(T)):
     m.addConstr(Course[other_indicies[i], T[i]] == 1)
 print "\t`Other` courses in each period"
 
 
+# Required Courses in periods 1-4
+# Must be in begning of day 
+for j in [88, 8, 9, 61, 62, 78, 79, 80, 81, 52, 53, 54, 55]:
+#for j in [88, 8, 9, 61, 62]:
+	m.addConstr(quicksum(Course[j, t] for t in [1,2,3,4]) == 1)
+print "\tRequired courses in periods 1 -> 4"
+
+# Concurrance  (People and lit (78,80)) and (Inquire and tools (52, 54))
+for t in T:
+	#m.addConstr(Course[78,t] == Course[80,t]) # ISSUE! <-----------------------------
+	m.addConstr(Course[52,t] == Course[54,t])
+print "Concurrance of Multi-instance courses"
+
+
+
+
+
+
 print "All constraints added"
+
+
 
 
 
@@ -388,23 +458,37 @@ print "All constraints added"
 #						Set Objective
 #-------------------------------------------------------------
 #-------------------------------------------------------------
-print "Setting objective"
-m.setObjective(X[1,1]*0, GRB.MAXIMIZE) # just find a feasible solution
 
-# try setting a gap
-#m.MIPGap=.05 # 5% is good enough for me
+# Null objective
+# m.setObjective(X[1,1]*0, GRB.MAXIMIZE) # just find a feasible solution
+
+# Set Gap
+m.Params.MIPGap=.3 # 30% <-- I know this is appropriate as have run quite a bit
+print "GAP set"
+
+# Preference objective
 #m.setObjective(quicksum(X[i,j]*P[i][j] for i in S for j in C), GRB.MAXIMIZE)
+
+# Minimize other objective
+m.setObjective(-1*quicksum(X[i,j] for i in S for j in other_indicies), GRB.MAXIMIZE)
+
+
+print "Objective Set"
 
 
 # print(str(num_vars), "Variables")
 # print(str(num_cons), "Constraints")
 
 
+
+
+elapsed = timeit.default_timer() - start_time
+print "Model setup in " + str(round(elapsed,3)) + " seconds"
 #-------------------------------------------------------------
 #							Solve
 #-------------------------------------------------------------
 # Solve model
-print("-"*20 + "Optimization Starting" + "-"*20)
+print("-"*30 + "Optimization Starting" + "-"*30)
 m.optimize() # NOTE: solver info printed to terminal
 
 
@@ -453,14 +537,32 @@ def get_teacher(course):
 	# if no teacher (other, or empty)
 	return ""
 
+def get_room(course, period):
+	"""
+	Returns string of room that `course` is taugh in durring `period`
+	"""
+	if "Other" in Cd[course] or "Empty" in Cd[course]:
+		return "N/A"
+	for s in R:
+		if RoomV[course, s, period] == 1:
+			return s
+
 def print_schedule(student):
 	"""
 	takes in the index of a student and prints out their schedule
 	"""
+	# Get students grade
+	g = Grades[student]
+	print "Student " + str(student) + " (grade " + str(g) + ")"
+	print "-"*85
 	for t in T:
 		for j in Cd:
 			if XV[student,j] == 1 and CourseV[j,t] == 1:
-				print "Period " + str(t) + ": " + Cd[j]
+				room = get_room(j,t)
+				teacher = get_teacher(j)
+				s1 = "Period " + str(t) + ": " + Cd[j]
+				#print "Period " + str(t) + ": " + Cd[j]
+				print s1 + ((50-len(s1))*".") + room + ((20-len(room))*".") + teacher
 
 #-------------------------------------------------------------
 #						Save Variable Values
@@ -502,6 +604,25 @@ for i in S:
 
 # with open('UVals.pickle', 'wb') as handle:
 #     pickle.dump(UV, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+# with open('CourseVals2.pickle', 'wb') as handle:
+#     pickle.dump(CourseV, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+
+
+## you can open these pickles files with
+# with open('Xvals2.pickle', 'rb') as handle:
+#     XV = pickle.load(handle)
+
+# with open('RoomVals2.pickle', 'rb') as handle:
+#     RoomV = pickle.load(handle)
+
+# with open('UVals2.pickle', 'rb') as handle:
+#     UV = pickle.load(handle)
+
+# with open('CourseVals2.pickle', 'rb') as handle:
+#     CourseV = pickle.load(handle)
+
 
 
 #-------------------------------------------------------------
@@ -575,7 +696,6 @@ for t in T:
 #------------------------------------------------------------
 # print all schedules
 # for i in S:
-# 	print "Student " + str(i)
 # 	print_schedule(i)
 # 	print "\n"
 
@@ -588,9 +708,9 @@ num_disliked = 0
 num_liked = 0
 for i in S:
 	for j in Cd:
-		if XV[i,j] != P[i][j]:
+		if XV[i,j] >= 1 and P[i][j] == 0:
 			num_disliked += 1
-		if XV[i,j] == 1 and P[i][j] == 1:
+		if XV[i,j] >= 1 and P[i][j] >= 1:
 			num_liked += 1
 
 print "Number of dispreffered courses assigned: " + str(num_disliked)
@@ -610,7 +730,28 @@ print "Min Enrollment: " + str(min_courses)
 print "Max Enrollment: " + str(max_courses)
 
 
-
+#------------------------------------------------------------
+#				Get a feel for "Other"
+#------------------------------------------------------------
+# Try to figure out how many other's people are enrolled in
+# num_other_enrolled = []
+# many_others = []
+# real_bad = {}
+# for i in S:
+# 	t = 0
+# 	for j in other_indicies:
+# 		t += XV[i,j]
+# 	num_other_enrolled.append(t)
+# 	if t > 2:
+# 		many_others.append(i)
+# 		real_bad[i] = t
+# num_other_enrolled = filter(lambda a: a!= 0, num_other_enrolled)
+# # if you have matplotlib imported:
+# plt.hist(num_other_enrolled, align='left')
+# plt.title("Number 'Other' Enrollments")
+# plt.xlabel("Number of 'Other' Courses")
+# plt.ylabel("Number of Students")
+# plt.show()
 
 
 
