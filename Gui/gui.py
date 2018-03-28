@@ -12,6 +12,7 @@ from tkinter.filedialog import askopenfilename, askdirectory
 # My helper classes 
 from Requirement import *
 from Popup import *
+from MenuBar import *
 
 import pandas as pd
 
@@ -55,6 +56,9 @@ class MainApplication(tk.Frame):
 		3) Student Preference Document (the form response)
 		"""
 
+		# master window
+		self.master = parent
+
 		# Document Upload Fields 
 		self.initial_file = None
 		self.secondary_file = None
@@ -72,6 +76,16 @@ class MainApplication(tk.Frame):
 		# test directory save
 		#tk.Button(parent, text="test directory", command = askdirectory).pack()
 		#dir_name = tk.askdirectory()
+
+		# Setup menubar
+		self.menubar = MenuBar(self)
+		print(self.menubar)
+		self.master.config(menu=self.menubar.menu)
+		# self.menu = tk.Menu(self.master)
+		# self.master.config(menu=self.menu)
+		# file = tk.Menu(self.menu)
+		# file.add_command(label="WHAT THE FUCK BITCH", command = lambda:print("YA HOE"))
+		# self.menu.add_cascade(label="FILE", menu=file)
 
 
 		#----------------------------------------------------------
@@ -174,6 +188,13 @@ class MainApplication(tk.Frame):
 		#					Results Frame
 		#----------------------------------------------------------
 
+
+
+
+
+	#---------------------------------------------------------------------------
+	#							File Select Methods
+	#---------------------------------------------------------------------------
 	def get_initial_file(self):
 		"""
 		Saves down the intial file from the first button
@@ -240,6 +261,11 @@ class MainApplication(tk.Frame):
 		print("Run Justina's script to make LP input preferences")
 
 
+
+
+	#---------------------------------------------------------------------------
+	#							Requirement Methods
+	#---------------------------------------------------------------------------
 	def add_req(self):
 		"""
 		Adds requirements, creates a popup window with the prompts to add
@@ -360,6 +386,6 @@ class MainApplication(tk.Frame):
 if __name__ == "__main__":
     root = tk.Tk()
     root.wm_title("Schedule Optimizer")
-    root.geometry("400x400") # fiddle with this, see if you can make it adaptive
+    root.geometry("800x800") # fiddle with this, see if you can make it adaptive
     MainApplication(root)
     root.mainloop()
