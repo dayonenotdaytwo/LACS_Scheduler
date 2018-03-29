@@ -7,7 +7,7 @@ Master GUI class for schedule optimizer
 """
 
 import tkinter as tk
-from tkinter.filedialog import askopenfilename, askdirectory
+from tkinter.filedialog import askopenfilename, askdirectory, asksaveasfilename
 
 # My helper classes 
 from Requirement import *
@@ -68,6 +68,7 @@ class MainApplication(tk.Frame):
 		# Derivate information fields
 		self.courses = None # list of courses
 		self.course_list_selected = False # initialize for popup
+		self.preference_input = None
 
 		# user created
 		self.requirements = [] # empty list
@@ -96,7 +97,8 @@ class MainApplication(tk.Frame):
 		label prompt & select button & label displaying the file name
 		"""
 		# Create the frame
-		self.file_select_frame = tk.Frame(parent, bd=10, bg="grey84")
+		# self.file_select_frame = tk.Frame(parent, bd=100, bg="grey84")
+		self.file_select_frame = tk.Frame(parent, bd=5, relief=tk.RAISED)
 		self.file_select_frame.pack(pady=10)
 
 		# First file
@@ -143,11 +145,11 @@ class MainApplication(tk.Frame):
 		#					Add RequirementFrame
 		#----------------------------------------------------------
 		self.requirements = [] # list containing requirement classes
-		self.req_frame = tk.Frame(parent)
+		self.req_frame = tk.Frame(parent, bd=5, relief=tk.RAISED)
 		self.req_frame.pack(pady=10)
 
 		# Upper frame (contains buttons)
-		self.req_frame_upper = tk.Frame(self.req_frame, bg="LightBlue1")
+		self.req_frame_upper = tk.Frame(self.req_frame)
 		self.req_frame_upper.pack()
 
 		# Button to add req
@@ -169,8 +171,8 @@ class MainApplication(tk.Frame):
 		tk.Label(self.req_frame_upper, text=s).grid(row=0, column=1, columnspan=2)
 
 		# Lower frame, contains the requirements (uppded when added)
-		self.req_frame_lower = tk.Frame(self.req_frame)
-		self.req_frame_lower.pack()
+		self.req_frame_lower = tk.Frame(self.req_frame, bd=2, relief=tk.RIDGE)
+		self.req_frame_lower.pack(padx=5, pady=5)
 
 
 		#----------------------------------------------------------
@@ -273,7 +275,6 @@ class MainApplication(tk.Frame):
 		-----> COME BACK AND SPECIFY WHICH FILE <---------
 		"""
 		# Create new window
-		print(self.courses)
 		if self.course_list_selected == False:
 			Popup("Must Select Course File First")
 			#self.popup("Must Select Course File First")

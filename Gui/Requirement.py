@@ -8,6 +8,32 @@ Containts Requirement class, which stores grade level requirements
 
 import tkinter as tk
 
+class MiniRequirement():
+	"""
+	Small version of Requirement, just has not tkinter relation so that
+	it can be pickled
+	"""
+
+	def __init__(self, Req):
+		"""
+		Takes in an instance of a Requirement and pulls
+		the relevant information
+		"""
+		self.grade = Req.grade
+		self.course1 = Req.course1
+		self.course2 = Req.course2
+
+		# Continue to fill in with other Requirement fileds
+
+	def create_full(self):
+		"""
+		Creates an instance of Requirement, can be used when
+		no pickling is needed
+		"""
+		r = Requirement(self.grade, self.course1, self.course2)
+		return r
+
+
 class Requirement():
 	"""
 	Class that reprseents a requirement, containts grade, and the one or two classes

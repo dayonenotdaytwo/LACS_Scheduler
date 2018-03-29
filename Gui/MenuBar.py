@@ -8,8 +8,10 @@ Class for a menubar for the main app
 
 import tkinter as tk
 from tkinter import messagebox
+from tkinter.filedialog import askopenfilename, askdirectory, asksaveasfilename
 
 from Popup import *
+from SavedConfig import *
 
 class MenuBar():
 	"""
@@ -73,13 +75,39 @@ class MenuBar():
 		"""
 		Opens and loads a saved configuration
 		"""
-		print("Figure out how to do this")
+		messagebox.showinfo("Information", 
+			"Your saved configuration will have extension .pkl")
+		file_name = askopenfilename()
+
+		# open the file
+		with open(file_name, "rb") as input:
+			s = pickle.load(input)
+
+		# Save all the fields to that parent
+		self.parent.courses = s.courses
+		self.parent.course_list_selected = True # indicate course list exists
+		for r in s.requirements:
+			full_req = r.create_full()
+			full_req.create_label(self.parent.req_frame_lower)
+			self.parent.requirements.append(full_req)
+
+
+		self.parent.preference_input = s.prefs
+
+		print("Open Sucessful")
+
 
 	def save(self):
 		"""
 		Saves the current configuration
 		"""
-		print("Figure out how to do this")
+		# get file path
+		messagebox.showinfo("Information","When saving do not put file extension")
+		file_name = asksaveasfilename()
+
+		# Create instance of SavedConfig
+		s = SavedConfig(self.parent.courses, self.parent.requirements)
+		s.save(file_name)
 
 
 	def help(self):
