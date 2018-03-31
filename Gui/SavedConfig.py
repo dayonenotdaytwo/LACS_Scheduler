@@ -26,7 +26,7 @@ class SavedConfig():
 	Fully describe what you will be saving
 	"""
 
-	def __init__(self, courses, requirements=[], prefs=None):
+	def __init__(self, inital_file_df, courses, requirements=[], prefs=None):
 		"""
 		Saves the required filed
 
@@ -47,6 +47,9 @@ class SavedConfig():
 			self.requirements.append(MiniRequirement(r))
 		self.prefs = prefs
 
+		# Save initial_file, as it would be needed for second step
+		self.initial_file_df = initial_file_df
+
 		# Add the other things you think should be saved
 
 
@@ -59,9 +62,4 @@ class SavedConfig():
 		with open(file_path, 'wb') as output:
 			pickle.dump(self, output, pickle.HIGHEST_PROTOCOL)
 		print("Succesfully Saved")
-
-		#example code:
-		# with open('company_data.pkl', 'wb') as output:
-		#     company1 = Company('banana', 40)
-		#     pickle.dump(company1, output, pickle.HIGHEST_PROTOCOL)
 

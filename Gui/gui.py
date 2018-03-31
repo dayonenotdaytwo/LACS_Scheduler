@@ -8,11 +8,15 @@ Master GUI class for schedule optimizer
 
 import tkinter as tk
 from tkinter.filedialog import askopenfilename, askdirectory, asksaveasfilename
+from tkinter import messagebox
 
 # My helper classes 
 from Requirement import *
 from Popup import *
 from MenuBar import *
+
+# Data functions
+from clean_data import *
 
 import pandas as pd
 
@@ -66,12 +70,17 @@ class MainApplication(tk.Frame):
 		self.completed_preference_file = None
 
 		# Derivate information fields
+		self.initial_file_df = None
 		self.courses = None # list of courses
 		self.course_list_selected = False # initialize for popup
 		self.preference_input = None
+		self.LP_input = None # the main df for the LP
 
 		# user created
 		self.requirements = [] # empty list
+
+		# Optimization Fields
+		self.optimization_output_directory = None
 
 
 		# test directory save
@@ -82,11 +91,10 @@ class MainApplication(tk.Frame):
 		self.menubar = MenuBar(self)
 		print(self.menubar)
 		self.master.config(menu=self.menubar.menu)
-		# self.menu = tk.Menu(self.master)
-		# self.master.config(menu=self.menu)
-		# file = tk.Menu(self.menu)
-		# file.add_command(label="WHAT THE FUCK BITCH", command = lambda:print("YA HOE"))
-		# self.menu.add_cascade(label="FILE", menu=file)
+
+		# Override window close button
+		# self.master.protocol('WM_DELETE_WINDOW', self.menubar.file_quit)
+		# Uncomment when done debugging
 
 
 		#----------------------------------------------------------
@@ -100,6 +108,10 @@ class MainApplication(tk.Frame):
 		# self.file_select_frame = tk.Frame(parent, bd=100, bg="grey84")
 		self.file_select_frame = tk.Frame(parent, bd=5, relief=tk.RAISED)
 		self.file_select_frame.pack(pady=10)
+
+		# Frame Title
+		tk.Label(self.file_select_frame, text="File Selection and Creation",
+			font=("Helvetica", 18)).grid(row=0, column=1, columnspan=3)
 
 		# First file
 		s = "Step 1: Please select the file list all courses:"
@@ -126,7 +138,7 @@ class MainApplication(tk.Frame):
 
 		# Make spreadsheet for student preferenfes, and LP input
 		s = "Step 4: Generate preference form: "
-		s += "\n(select where it should be saved):"
+		s += "\n(select where it should be saved)"
 		tk.Label(self.file_select_frame, text=s).grid(row=4, column=1, 
 			sticky="W")
 		tk.Button(self.file_select_frame, text="Make File",
@@ -147,6 +159,10 @@ class MainApplication(tk.Frame):
 		self.requirements = [] # list containing requirement classes
 		self.req_frame = tk.Frame(parent, bd=5, relief=tk.RAISED)
 		self.req_frame.pack(pady=10)
+
+		# Add a Frame Label
+		tk.Label(self.req_frame, text="Required Courses", 
+			font=("Helvetica", 18)).pack()
 
 		# Upper frame (contains buttons)
 		self.req_frame_upper = tk.Frame(self.req_frame)
@@ -183,7 +199,41 @@ class MainApplication(tk.Frame):
 		Button to load a previously saved configuration
 		Slider to set optimizaiton speed (inverse MIPGap)
 		Button to start optimization
+
+		set up with a grid layout
 		"""
+		self.opt_frame = tk.Frame(self.master, bd=5, relief=tk.RAISED)
+		self.opt_frame.pack(pady=10)
+
+		# Create title for frame
+		tk.Label(self.opt_frame, text="Optimization Menu",
+			 font=("Helvetica", 18)).grid(row=1, column=1, columnspan=2)
+
+
+		# Add save/open button (tied to menubar function)
+		tk.Button(self.opt_frame, text="Save Configuration",
+			command = self.menubar.save).grid(row=2, column=1, padx=15)
+		tk.Button(self.opt_frame, text="Open Configuration",
+			command = self.menubar.open).grid(row=2, column=2, padx=15)
+
+		# Add MIPGap slider
+		tk.Label(self.opt_frame, text="Speed Adjust (smaller is slower)").grid(
+			row=3, column=1, columnspan=2)
+		self.slider = tk.Scale(self.opt_frame, from_=0, to_=1,
+			orient=tk.HORIZONTAL, resolution=0.01, length=200)
+		self.slider.grid(row=4, column=1, columnspan=2)
+
+		# Select Save Location
+		tk.Button(self.opt_frame, text="Select Save Location", 
+			command=self.set_opt_output_loc).grid(row=5, column=1, 
+			columnspan=2, pady=5)
+
+		# Optimize Button
+		tk.Button(self.opt_frame, text="Create Schedule",
+			 highlightbackground="red", pady=2, width=20, height=4,
+			 font=("Helvetica", 14, "bold"),
+			 command = self.optimize).grid(row=6,
+			column=1, columnspan=2, pady=15)
 
 
 		#----------------------------------------------------------
@@ -199,11 +249,14 @@ class MainApplication(tk.Frame):
 	#---------------------------------------------------------------------------
 	def get_initial_file(self):
 		"""
-		Saves down the intial file from the first button
+		Saves down the intial file from the first button,
+		this file should have all the course names, as well as other relevant
+		course information (minus teachers)
 		"""
 		# save the file name
 		self.initial_file = askopenfilename()
 		df = pd.read_csv(self.initial_file)
+		self.initial_file_df = df
 
 		# make sure it has the right column header
 		if "Course Name" not in df.columns:
@@ -227,9 +280,32 @@ class MainApplication(tk.Frame):
 		return file[file.rfind("/") + 1:]
 
 	def make_teacher_file(self):
+		"""
+		Takes the initial file (with all courses and info, etc.) and uses
+		the clean_data functions to create the second form to fill out
+		the one that ties courses to teachers
 
-		print("Complete with Justina's script")
+		Requires
+		--------
+		self.initial_file is NOT None, this can either have been selected, or 
+		saved in a previous configuration
+		"""
+
+		print("Running Junstina's function")
+
+		# make sure we have an initial file to work with
+		if self.initial_file_df is None:
+			# Alert the user with message box
+			messagebox.showerror("Error",
+			"Must have completed step one, or loaded a previous configuration")
+			return
+
+		# Continue with file creation
 		dir_name = askdirectory()
+		intermediate_df = create_teacher_info(self.initial_file_df, dir_name)
+
+		# Create the final dataframe for LP input
+		self.LP_input = create_LP_input(intermediate_df)
 		print(dir_name)
 
 
@@ -244,8 +320,7 @@ class MainApplication(tk.Frame):
 		tk.Label(self.file_select_frame,
 			text = "  " + self.get_file_name(self.secondary_file)).grid(
 			row = 3, column=3, sticky="W")
-
-		print("TODO: add justina's script for making final LP input with this")
+			
 
 	def make_preference_form(self):
 		print("Add Dae Won's script to generate form")
@@ -378,6 +453,32 @@ class MainApplication(tk.Frame):
 		tk.Button(pop, text="Finished", 
 			command = done).pack(side='bottom', pady=10)
 
+	#---------------------------------------------------------------------------
+	#							Optimization Methods
+	#---------------------------------------------------------------------------
+	def set_opt_output_loc(self):
+		"""
+		Sets the direcotry where the optimization output will be saved
+		"""
+		#dir = askdirectory()
+		s = "Select the location where you would like the output to be saved.\n\n"
+		s += "A folder with the name specified will be created in this location"
+		s += "\n\n**DO NOT put a file extension in your input**"
+		messagebox.showinfo("Note", s)
+		dir = asksaveasfilename()
+		self.optimization_output_directory = dir
+
+
+	
+
+	def optimize(self):
+		"""
+		Runs the schedule optimizer
+		First: verifies that we have all the necessary data
+		Seoncd: Checks the save location
+		print("Put your function here")
+		"""
+		pass
 
 
 ###

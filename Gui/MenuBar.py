@@ -106,7 +106,8 @@ class MenuBar():
 		file_name = asksaveasfilename()
 
 		# Create instance of SavedConfig
-		s = SavedConfig(self.parent.courses, self.parent.requirements)
+		s = SavedConfig(self.parent.initial_file_df, self.parent.courses,
+			 self.parent.requirements)
 		s.save(file_name)
 
 
