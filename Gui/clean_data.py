@@ -65,14 +65,22 @@ def create_teacher_info(course_info, out_file_dir):
 
 
 
-def create_LP_input(full_course_info):
+def create_LP_input(full_course_info, origional_course_input):
 	"""
 	Creates the pandas dataframe that serces as the main input for the LP
 	this works off of the dataframe crated by `create_teacher_info`
+
+	Parameters
+	----------
+	full_course_info - The dataframe produced by create_teacher_info
+						(has the multiple instances listed)
+
+	origional_course_input - the origional file the school is to fill out
+							 i.e., the course_info argument to create_teacher_info
 	"""
 	add = full_course_info # per the way Justina wrote her code
 
-	all_info = pd.concat([course_info, add], axis=0).sort_values(by=['Course Name']).reset_index(drop=True)
+	all_info = pd.concat([origional_course_input, add], axis=0).sort_values(by=['Course Name']).reset_index(drop=True)
 
 	# add in double periods 
 	add_double = pd.DataFrame() 

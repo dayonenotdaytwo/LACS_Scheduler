@@ -26,7 +26,8 @@ class SavedConfig():
 	Fully describe what you will be saving
 	"""
 
-	def __init__(self, inital_file_df, courses, requirements=[], prefs=None):
+	def __init__(self, initial_file_df, courses, requirements, preference_input,
+					LP_input, teacher_file):
 		"""
 		Saves the required filed
 
@@ -38,19 +39,24 @@ class SavedConfig():
 		requirements - list of Requirement objects 
 
 		prefs - a matrix of student preferences
+
+		LP_input - pandas df that will serve as main input to LP
+
+		teacher_file - mapping teachers to courses
+
+		**These are all the same as we have in the MainApplication fileds**
 		"""
 
+		self.initial_file_df = initial_file_df
 		self.courses = courses
 		self.requirements = requirements
 		self.requirements = [] # list of MiniRequirements
 		for r in requirements:
 			self.requirements.append(MiniRequirement(r))
-		self.prefs = prefs
+		self.preference_input = preference_input
+		self.LP_input = LP_input
+		self.teacher_file = teacher_file
 
-		# Save initial_file, as it would be needed for second step
-		self.initial_file_df = initial_file_df
-
-		# Add the other things you think should be saved
 
 
 	def save(self, file_path):

@@ -18,9 +18,8 @@ import timeit # just to check setuptie
 
 from Requirement import *
 
-
-def optimize_schedule(prefs, LP_input, grades, prox, teacher_info, 
-		GAP, requirements, save_location):
+def optimize_schedule(prefs, LP_input, grades, teacher, GAP, requirements=None,
+			prox=None, save_location=None):
 	"""
 	Runs the optimizer in SCIP
 
@@ -30,26 +29,26 @@ def optimize_schedule(prefs, LP_input, grades, prox, teacher_info,
 
 	LP_Input- a Pandas DataFrame coming from a clean_data function, that serves
 			  as the main input to the LP, it must have columns:
-			  	Course Name
-			  	Double Period
-			  	Max
-			  	Min
-			  	Required Grades
-			  	Number of Instances
-			  	Room Type
+				Course Name
+				Double Period
+				Max
+				Min
+				Required Grades
+				Number of Instances
+				Room Type
 
-  	grades 	- a Pandas DataFrame that has all the students and their grade
+	grades 	- a Pandas DataFrame that has all the students and their grade
 
-  	prox 	- a Padnas DataFrame that serves as the proximity matrix for courses
+	prox 	- a Padnas DataFrame that serves as the proximity matrix for courses
 
-  	teacher_info - a Padnas DataFrame that list all courses and the teacher
-  				   that will be teaching it
+	teacher_info - a Padnas DataFrame that list all courses and the teacher
+				   that will be teaching it
 
 	Gap 	- the number from the GUI slider we will use to determine 
 			  what MIPGap to run the solver with
 
-  	Requirements - List of requirement objects that were solicited from the user
-  				   these are then iterated over, parsed, and coded
+	Requirements - List of requirement objects that were solicited from the user
+				   these are then iterated over, parsed, and coded
 
 
 	NOTE: most of the commented out stuff is from a previous iteration
@@ -60,7 +59,9 @@ def optimize_schedule(prefs, LP_input, grades, prox, teacher_info,
 	NOTE 2: The commented out variables, constraints, and other optimization
 	code is for Gurobi, the non-commented is for SCIP
 	"""
-
+	# prefs.to_csv("OptTestFiles/prefs.csv")
+	# LP_input.to_csv("OptTestFiles/LP_input.csv")
+	# teacher.to_csv("OptTestFiles/teacher.csv")
 
 	start_time = timeit.default_timer()
 
@@ -70,10 +71,12 @@ def optimize_schedule(prefs, LP_input, grades, prox, teacher_info,
 	# prefs = pd.read_csv("Resources/FlatChoicesBinary.csv")
 	# courses = pd.read_csv("Resources/FlatCourseSize.csv")
 	#prox = pd.read_csv("Resources/Proximity.csv")
-	prox = pd.read_csv("Resources/Proximity.csv")
-	teacher = pd.read_csv("Resources/Teacher_Info.csv", header=None)
+	prox = pd.read_csv("../Resources/Proximity.csv")
+	#prox.to_csv("OptTestFiles/prox.csv")
+	#teacher = pd.read_csv("../Resources/Teacher_Info.csv", header=None)
 	# course_rooms = pd.read_csv("Resources/CourseRoomReqs.csv")
-	grades = pd.read_csv("Resources/grades.csv", header=None)
+	grades = pd.read_csv("../Resources/grades.csv", header=None)
+	#grades.to_csv("OptTestFiles/grades.csv")
 
 	# clean it up
 	prefs.rename(columns={"Unnamed: 0": "Student"}, inplace=True)
@@ -97,14 +100,17 @@ def optimize_schedule(prefs, LP_input, grades, prox, teacher_info,
 	Cd = {}
 	for i in df.index:
 		Cd[i] = df["Course Name"].iloc[i]
+	
+	for i in Cd:
+		print(i, Cd[i])
 
 	C = range(len(Cd))
 
 	# Gather "Other Indicies"
 	other_indicies = []
 	for j in Cd:
-	    if "Other" in Cd[j]:
-	        other_indicies.append(j)
+		if "Other" in Cd[j]:
+			other_indicies.append(j)
 
 	T = [1,2,3,4,7,8] # Periods
 
@@ -121,12 +127,15 @@ def optimize_schedule(prefs, LP_input, grades, prox, teacher_info,
 	# Double periods
 	# Db = courses["Double"].fillna(0).astype(int)
 	Db = df["Double Period"].fillna(0).astype(int)
+	Db = Db.values
 
 	# Course Sizes (min and max)
 	# MIN = courses["Min"]
 	# MAX = courses["Max"]
 	MIN = df["Min"]
+	MIN = MIN.values
 	MAX = df["Max"]
+	MAX = MAX.values
 
 	# To check feasibility:
 	# MIN = [3]*len(C)
@@ -139,18 +148,18 @@ def optimize_schedule(prefs, LP_input, grades, prox, teacher_info,
 	prox_dict = {}
 	Subjects = list(prox.columns)[1:]
 	for subj in list(prox.columns)[1:]:
-	    prox_dict[subj] = prox[subj]
+		prox_dict[subj] = prox[subj]
 
 	# Required Courses
-	grade_requirements = {}
-	for grade in [5,6,7,8,9,10,11,12]:
-		grade_requirements[grade] = df.index[df['Required Grades'] == grade].tolist()
+	# grade_requirements = {}
+	# for grade in [5,6,7,8,9,10,11,12]:
+	# 	grade_requirements[grade] = df.index[df['Required Grades'] == grade].tolist()
 
 
-	# remove empties
-	for g in grade_requirements.keys():
-		if grade_requirements[g] == []:
-			del grade_requirements[g]
+	# # remove empties 
+	# for g in grade_requirements.keys():
+	# 	if grade_requirements[g] == []:
+	# 		del grade_requirements[g]
 
 	# --------------------------------------------------------
 	#                  Multi-Instance Course list
@@ -159,27 +168,44 @@ def optimize_schedule(prefs, LP_input, grades, prox, teacher_info,
 	# Create a list of these courses (only the first half of the double
 	# if it is a double course)
 	multi = df["Number of Instances"].fillna(0).astype(int)
+	# print("\n\n\nMulti is:\n\n")
+	# print(multi)
+	# print("\n\n\nMulti of a single index\n\n")
+	# print("Multi is of type", type(multi))
+	# print("At a single index", multi[2])
+	# print("At a single index with get", multi.get(2))
+	# print("type when trying to convert", type(multi[0]))
+	multi=multi.values
+	# print("\n\n\nMulti (values) is:\n\n")
+	# print(multi)
+	# print("\n\n\nMulti of a single index\n\n")
+	# print("Multi is of type", type(multi))
+	# print("At a single index", multi[2])
+	# #print("At a single index with get", multi.get(2))
+	# print("type when trying to convert", type(multi[0]))
 	multi_nested_list = []
 	j = 0
 	while j < len(Cd):
-	    # if it is part of multi-instance cluster
-	    if multi[j] == 2:
-	        # if it is a double period
-	        if Db[j] == 1:
-	            new = [j, j+2]
-	            j += 4 # pass over cluster
-	        else:
-	            # not a double period
-	            new = [j, j+1]
-	            j += 2
-	        multi_nested_list.append(new)
-	    # if not a multi-instance  
-	    elif multi[j] == 3:
-	        # these can't be double periods so just drop in all 3
-	        multi_nested_list.append([j, j+1, j+2])
-	        j += 3 
-	    else:
-	        j += 1
+		# if it is part of multi-instance cluster
+		if multi[j] == 2:
+		#print("testing multi[j] ==2 with j=", j, "multi[j]=",multi[j])
+		#if int(multi.get(j)) == 2:
+			# if it is a double period
+			if Db[j] == 1:
+				new = [j, j+2]
+				j += 4 # pass over cluster
+			else:
+				# not a double period
+				new = [j, j+1]
+				j += 2
+			multi_nested_list.append(new)
+		# if not a multi-instance  
+		elif multi[j] == 3:
+			# these can't be double periods so just drop in all 3
+			multi_nested_list.append([j, j+1, j+2])
+			j += 3 
+		else:
+			j += 1
 
 
 	# ignore OTHER in multi-instance (these have 6 next to them)
@@ -191,24 +217,24 @@ def optimize_schedule(prefs, LP_input, grades, prox, teacher_info,
 	# Need matrix with instructors as rows, all courses as columns, and 1 if teaching that course
 	I_C_dict = {}
 	for i in I:
-	    I_C_dict[i] = []
-	    for index in range(teacher.shape[0]):
-	        if teacher.iloc[index][0] == i:
-	            l = I_C_dict[i]
-	            l.append(teacher.iloc[index][1])
-	            I_C_dict[i] = l
+		I_C_dict[i] = []
+		for index in range(teacher.shape[0]):
+			if teacher.iloc[index][0] == i:
+				l = I_C_dict[i]
+				l.append(teacher.iloc[index][1])
+				I_C_dict[i] = l
 
 
 	# Teacher_Course_Matrix 
 	courses_list = list(Cd.values())
 	Teacher_Course_Matrix = np.zeros(len(courses_list))
 	for i in I:
-	    t = np.zeros(len(courses_list))
-	    for j in Cd:
-	        if Cd[j] in I_C_dict[i]:
-	            # print(i, "is teaching:", (40-len(i)-12)*".", Cd[j])
-	            t[j] =1
-	    Teacher_Course_Matrix = np.vstack([Teacher_Course_Matrix, np.matrix(t)])
+		t = np.zeros(len(courses_list))
+		for j in Cd:
+			if Cd[j] in I_C_dict[i]:
+				# print(i, "is teaching:", (40-len(i)-12)*".", Cd[j])
+				t[j] =1
+		Teacher_Course_Matrix = np.vstack([Teacher_Course_Matrix, np.matrix(t)])
 
 	Ta = np.array(Teacher_Course_Matrix[1:]) # matrix tying teachers to courses they teach
 
@@ -218,7 +244,7 @@ def optimize_schedule(prefs, LP_input, grades, prox, teacher_info,
 	# --------------------------------------------------------
 	# Set of rooms
 	R = ["U1", "Steve", "U2", "U3", "U4/5", "U6", "U7", "L2", "L3", "Library", "Art", "L4", 
-	        "L6", "Sci A", "Sci B", "Sci C", "Music Room", "Gym", "Gym2"]
+			"L6", "Sci A", "Sci B", "Sci C", "Music Room", "Gym", "Gym2"]
 
 	# Department Courses
 	Science_Rooms = ["Sci A", "Sci B", "Sci C"]
@@ -278,45 +304,45 @@ def optimize_schedule(prefs, LP_input, grades, prox, teacher_info,
 	# Add Student Variables (X)
 	X = {}
 	for i in S:
-	    for j in range(len(C)):
-	        name = "Student " + str(i) + " in course " + str(j)
-	        # X[i,j] = m.addVar(vtype=GRB.BINARY, name=name)
-	        X[i,j] = m.addVar(vtype="B", name=name)
-	        num_vars += 1
+		for j in range(len(C)):
+			name = "Student " + str(i) + " in course " + str(j)
+			# X[i,j] = m.addVar(vtype=GRB.BINARY, name=name)
+			X[i,j] = m.addVar(vtype="B", name=name)
+			num_vars += 1
 	print("\tStudent/Course variable added")
 
 	# Add Course Variable
 	Course = {} # Variable dictionary
 	for j in range(len(C)):
-	    for t in T:
-	        name = "Course " + str(j) + " in period " + str(t)
-	        # Course[j,t] = m.addVar(vtype=GRB.BINARY, name=name)
-	        Course[j,t] = m.addVar(vtype="B", name=name)
-	        num_vars += 1
+		for t in T:
+			name = "Course " + str(j) + " in period " + str(t)
+			# Course[j,t] = m.addVar(vtype=GRB.BINARY, name=name)
+			Course[j,t] = m.addVar(vtype="B", name=name)
+			num_vars += 1
 	print("\tCourse/Period variable added")
 
 	# Create the u variable
 	U = {}
 	for i in S:
-	    for j in range(len(C)):
-	        for t in T:
-	            name = "min " + str(i) + ", " + str(j) + ", " + str(t)
-	            # U[i,j,t] = m.addVar(vtype=GRB.BINARY, name=name)
-	            U[i,j,t] = m.addVar(vtype="B", name=name)
-	            num_vars += 1
+		for j in range(len(C)):
+			for t in T:
+				name = "min " + str(i) + ", " + str(j) + ", " + str(t)
+				# U[i,j,t] = m.addVar(vtype=GRB.BINARY, name=name)
+				U[i,j,t] = m.addVar(vtype="B", name=name)
+				num_vars += 1
 	print("\tU(Student/Course/Period) variable added")
 
 	# Define r  room variable (over course j in room r durring period t)
 	Rv = {}
 	for j in range(len(C)):
 		if "Other" not in Cd[j] and "Empty" not in Cd[j]:
-		    for s in R:
-		        for t in T:
-		            name = "Course " + str(j) + " in room " + str(s) + \
-		            		" durring period " + str(t)
-		            # Rv[j,s,t] = m.addVar(vtype=GRB.BINARY, name=name)
-		            Rv[j,s,t] = m.addVar(vtype="B", name=name)
-		            num_vars += 1
+			for s in R:
+				for t in T:
+					name = "Course " + str(j) + " in room " + str(s) + \
+							" durring period " + str(t)
+					# Rv[j,s,t] = m.addVar(vtype=GRB.BINARY, name=name)
+					Rv[j,s,t] = m.addVar(vtype="B", name=name)
+					num_vars += 1
 	print("\tRoom/Period Variables added")
 
 	#------------------------------------------------------------
@@ -329,24 +355,24 @@ def optimize_schedule(prefs, LP_input, grades, prox, teacher_info,
 
 	# Force student in one course per period
 	for i in S:
-	    for t in T:
-	        # m.addConstr(quicksum(U[i,j,t] for j in C) == 1) # one course per period
-	        m.addCons(quicksum(U[i,j,t] for j in C) == 1) # one course per period
-	        num_cons += 1
+		for t in T:
+			# m.addConstr(quicksum(U[i,j,t] for j in C) == 1) # one course per period
+			m.addCons(quicksum(U[i,j,t] for j in C) == 1) # one course per period
+			num_cons += 1
 	print("\tOne course per period")
 
 
 	# "AND" Constraint--no more than one course per period for a student
 	for i in S:
-	    for j in C:
-	        # m.addConstr(X[i,j] == quicksum(U[i,j,t] for t in T))
-	        m.addCons(X[i,j] == quicksum(U[i,j,t] for t in T))
-	        num_cons += 1
-	        for t in T:
-	            # m.addConstr(Course[j,t] >= U[i,j,t])
-	            m.addCons(Course[j,t] >= U[i,j,t])
-	            num_cons += 1
-	print("\tU set-up constraints (`and`) added"
+		for j in C:
+			# m.addConstr(X[i,j] == quicksum(U[i,j,t] for t in T))
+			m.addCons(X[i,j] == quicksum(U[i,j,t] for t in T))
+			num_cons += 1
+			for t in T:
+				# m.addConstr(Course[j,t] >= U[i,j,t])
+				m.addCons(Course[j,t] >= U[i,j,t])
+				num_cons += 1
+	print("\tU set-up constraints (`and`) added")
 
 
 	# must have preffed the course (minus the requirements)
@@ -377,13 +403,14 @@ def optimize_schedule(prefs, LP_input, grades, prox, teacher_info,
 
 
 	# Add capacity and minimum constraint
+	print("Are we having the same problem with MAX?:", MAX[0])
 	for j in range(len(C)):
-	    # m.addConstr(quicksum(X[i,j] for i in S) <= MAX[j])
-	    m.addCons(quicksum(X[i,j] for i in S) <= MAX[j])
-	    #m.addConstr(quicksum(X[i,j] for i in S) <= 100)
-	    #m.addConstr(quicksum(X[i,j] for i in S) >= MIN[j])
-	    m.addCons(quicksum(X[i,j] for i in S) >= MIN[j])
-	    num_cons += 2
+		# m.addConstr(quicksum(X[i,j] for i in S) <= MAX[j])
+		m.addCons(quicksum(X[i,j] for i in S) <= MAX[j])
+		#m.addConstr(quicksum(X[i,j] for i in S) <= 100)
+		#m.addConstr(quicksum(X[i,j] for i in S) >= MIN[j])
+		m.addCons(quicksum(X[i,j] for i in S) >= MIN[j])
+		num_cons += 2
 	print("\tCourse capacity")
 
 
@@ -396,36 +423,64 @@ def optimize_schedule(prefs, LP_input, grades, prox, teacher_info,
 	min_sub_dict = {}
 	max_sub_dict = {}
 	for subject in Subjects:
-	    min_sub_dict[subject] = np.ones(len(S))*0
-	    max_sub_dict[subject] = np.ones(len(S))*3 
-	    # it works when max is 6 --> I think the constraints are written correctly?
-	    # infeasible when 5, very suspicious
+		min_sub_dict[subject] = np.ones(len(S))*0
+		max_sub_dict[subject] = np.ones(len(S))*3 
+		# it works when max is 6 --> I think the constraints are written correctly?
+		# infeasible when 5, very suspicious
 
 
 	# # proximity by subject
 	#for subject in Subjects:
-	for subject in ["K", "F", "D", "M", "IIC", "VI", "C", "IV", "IIA", "E", "I",
-				"H", "V", "VII", "Other", "G", "J", "IIB", "L", "IB"]: # test with limited set of subjects, trying to find issue
-		for i in S:
-		    if min_sub_dict[subject][i] > 0:
-		        # m.addConstr(quicksum(prox_dict[subject][j]*X[i,j] for j in range(len(C))) >= min_sub_dict[subject][i])
-		        m.addCons(quicksum(prox_dict[subject][j]*X[i,j] for j in range(len(C))) >= min_sub_dict[subject][i])
-		    # do we always need a max?
-		    # m.addConstr(quicksum(prox_dict[subject][j]*X[i,j] for j in range(len(C))) <= max_sub_dict[subject][i])
-		    m.addCons(quicksum(prox_dict[subject][j]*X[i,j] for j in range(len(C))) <= max_sub_dict[subject][i])
-	print("\tProximity constraint added")
+	# print("min_sub_dict:", min_sub_dict)
+	# print("max_sub_dict:", max_sub_dict)
+	# print("Prox_dict", prox_dict.keys())
+	# print("Prox_dict['Other']", prox_dict["Other"])
+	# print("Prox_dict['K']", prox_dict["K"])
+	# print(prox_dict["Other"][0])
+	# print("\n\nRun over all j for Other")
+	# print("Cd is", Cd )
+	# for j in Cd:
+	# 	print("j:", j)
+	# 	if j == 89:
+	# 		print("j is 89 so should get a 1?")
+	# 	print(prox_dict["Other"][j])
 
+	# for subject in ["K", "F", "D", "M", "IIC", "VI", "C", "IV", "IIA", "E", "I",
+	# 			"H", "V", "VII", "Other", "G", "J", "IIB", "L", "IB"]: # test with limited set of subjects, trying to find issue
+	# 	print("subject:", subject)
+	# 	for i in S:
+	# 		#print("i:", i)
+	# 		if min_sub_dict[subject][i] > 0:
+	# 			# m.addConstr(quicksum(prox_dict[subject][j]*X[i,j] for j in range(len(C))) >= min_sub_dict[subject][i])\
+	# 			print("We have hit the interior")
+	# 			m.addCons(quicksum(prox_dict[subject][j]*X[i,j] for j in range(len(C))) >= min_sub_dict[subject][i])
+	# 		# do we always need a max?
+	# 		# m.addConstr(quicksum(prox_dict[subject][j]*X[i,j] for j in range(len(C))) <= max_sub_dict[subject][i])
+	# 		m.addCons(quicksum(prox_dict[subject][j]*X[i,j] for j in range(len(C))) <= max_sub_dict[subject][i])
+	# print("\tProximity constraint added")
+
+	print("\n\nProximity constraints NOT ADDED as I don't think the files match\n\n")
 
 	#------------------------------------------------------------
 	#						Teacher Constraitns
 	#------------------------------------------------------------
 
 	# Teacher teaching at most one course per period
+	print("\n\nTa is:", Ta)
+	print("\n\nTa Shape:", Ta.shape)
+	print("\n\nCd is:", Cd)
+	print("I is:", I)
+	print("teacher is:", teacher)
+
+	for j in Cd:
+		print(Cd[j])
+
 	for k in range(len(I)):
-	    for t in T:
-	        # m.addConstr(quicksum(Course[j,t]*Ta[k][j] for j in C) <= 1)
-	        m.addCons(quicksum(Course[j,t]*Ta[k][j] for j in C) <= 1)
-	        num_cons += 1
+		for t in T:
+			print("k:", k, "t:", t)
+			# m.addConstr(quicksum(Course[j,t]*Ta[k][j] for j in C) <= 1)
+			m.addCons(quicksum(Course[j,t]*Ta[k][j] for j in C) <= 1)
+			num_cons += 1
 	print("\tTeacher teaches as most once per period")
 
 
@@ -434,48 +489,48 @@ def optimize_schedule(prefs, LP_input, grades, prox, teacher_info,
 	#------------------------------------------------------------
 	# Course Taught only once Constraint
 	for j in range(len(C)):
-	    # m.addConstr(quicksum(Course[j,t] for t in T) == 1)
-	    m.addCons(quicksum(Course[j,t] for t in T) == 1)
-	    num_cons += 1
+		# m.addConstr(quicksum(Course[j,t] for t in T) == 1)
+		m.addCons(quicksum(Course[j,t] for t in T) == 1)
+		num_cons += 1
 	print("\tCourse taught only once")
 
 	# Double period--consecutive constraints
 	for j in range(len(C)):
-	    if Db[j] == 1: # if double period
-	        for t in T:
-	            if t != 4 and t != 8:
-	                # m.addConstr(Course[j,t] == Course[j+1, t+1]) # change to == from >= 
-	                m.addCons(Course[j,t] == Course[j+1, t+1]) # change to == from >= 
-	                num_cons += 1
+		if Db[j] == 1: # if double period
+			for t in T:
+				if t != 4 and t != 8:
+					# m.addConstr(Course[j,t] == Course[j+1, t+1]) # change to == from >= 
+					m.addCons(Course[j,t] == Course[j+1, t+1]) # change to == from >= 
+					num_cons += 1
 	print("\tDouble periods must be consecutive")
 
 
 	# # Double Period--not 4th or 8th
 	for j in range(len(C)):
-	    if Db[j] == 1:
-	        # m.addConstr(Course[j,4] == 0)
-	        m.addCons(Course[j,4] == 0)
-	        # m.addConstr(Course[j,8] == 0)
-	        m.addCons(Course[j,8] == 0)
-	        num_cons += 2
+		if Db[j] == 1:
+			# m.addConstr(Course[j,4] == 0)
+			m.addCons(Course[j,4] == 0)
+			# m.addConstr(Course[j,8] == 0)
+			m.addCons(Course[j,8] == 0)
+			num_cons += 2
 	print("\tDouble periods not in 4th or 8th")
 
 
 	# # Double Period--Student in both
 	for i in S:
-	    for j in range(len(C)):
-	        if Db[j] == 1:
-	            # m.addConstr(X[i,j+1] == X[i,j]) # this was >= but == is better?
-	            m.addCons(X[i,j+1] == X[i,j]) # this was >= but == is better?
-	            num_cons += 1
+		for j in range(len(C)):
+			if Db[j] == 1:
+				# m.addConstr(X[i,j+1] == X[i,j]) # this was >= but == is better?
+				m.addCons(X[i,j+1] == X[i,j]) # this was >= but == is better?
+				num_cons += 1
 	print("\tStudents in both parts of double")
 
 	# Multi-Instance courses (students only in one instance--at most)
 	for i in S:
-	    for course_set in multi_nested_list:
-	        # in at most one course of the list
-	        # m.addConstr(quicksum(X[i,j] for j in course_set) <= 1)
-	        m.addCons(quicksum(X[i,j] for j in course_set) <= 1)
+		for course_set in multi_nested_list:
+			# in at most one course of the list
+			# m.addConstr(quicksum(X[i,j] for j in course_set) <= 1)
+			m.addCons(quicksum(X[i,j] for j in course_set) <= 1)
 	print("\t Students in at most of instance of multi-instance Course ")
 
 
@@ -524,9 +579,9 @@ def optimize_schedule(prefs, LP_input, grades, prox, teacher_info,
 	# If course taught, gets one room
 	for j in range(len(C)):
 		if "Other" not in Cd[j] and "Empty" not in Cd[j]:
-		    for t in T:
-		        # m.addConstr(quicksum(Rv[j,s,t] for s in R) == Course[j,t])
-		        m.addCons(quicksum(Rv[j,s,t] for s in R) == Course[j,t])
+			for t in T:
+				# m.addConstr(quicksum(Rv[j,s,t] for s in R) == Course[j,t])
+				m.addCons(quicksum(Rv[j,s,t] for s in R) == Course[j,t])
 	print("\tCourses get one room")
 
 	# make set of course indicies without Other and Empty
@@ -579,8 +634,8 @@ def optimize_schedule(prefs, LP_input, grades, prox, teacher_info,
 	#-------------------------------------------------------------
 	# Force "Other" courses in specific periods
 	for i in range(len(T)):
-	    # m.addConstr(Course[other_indicies[i], T[i]] == 1)
-	    m.addCons(Course[other_indicies[i], T[i]] == 1)
+		# m.addConstr(Course[other_indicies[i], T[i]] == 1)
+		m.addCons(Course[other_indicies[i], T[i]] == 1)
 	print("\t`Other` courses in each period")
 
 

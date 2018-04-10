@@ -84,6 +84,7 @@ class MenuBar():
 			s = pickle.load(input)
 
 		# Save all the fields to that parent
+		self.parent.initial_file_df = s.initial_file_df
 		self.parent.courses = s.courses
 		self.parent.course_list_selected = True # indicate course list exists
 		for r in s.requirements:
@@ -91,8 +92,16 @@ class MenuBar():
 			full_req.create_label(self.parent.req_frame_lower)
 			self.parent.requirements.append(full_req)
 
+		self.parent.preference_input = s.preference_input
+		self.parent.LP_input = s.LP_input
+		self.parent.teacher_file = s.teacher_file
 
-		self.parent.preference_input = s.prefs
+		print("Initial File\n\n", self.parent.initial_file_df)
+		print("Courses\n\n", self.parent.courses)
+		print("Requirements\n\n", self.parent.requirements)
+		print("Preferences\n\n", self.parent.preference_input)
+		print("LP Input\n\n", self.parent.LP_input)
+		print("Teacher File\n\n", self.parent.teacher_file)
 
 		print("Open Sucessful")
 
@@ -107,7 +116,8 @@ class MenuBar():
 
 		# Create instance of SavedConfig
 		s = SavedConfig(self.parent.initial_file_df, self.parent.courses,
-			 self.parent.requirements)
+			 self.parent.requirements, self.parent.preference_input,
+			 self.parent.LP_input, self.parent.teacher_file)
 		s.save(file_name)
 
 

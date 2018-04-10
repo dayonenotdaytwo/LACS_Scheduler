@@ -14,9 +14,11 @@ from tkinter import messagebox
 from Requirement import *
 from Popup import *
 from MenuBar import *
+from Optimizer import *
 
-# Data functions
+# Helper functions
 from clean_data import *
+from optimize import *
 
 import pandas as pd
 
@@ -65,7 +67,7 @@ class MainApplication(tk.Frame):
 
 		# Document Upload Fields 
 		self.initial_file = None
-		self.secondary_file = None
+		self.teacher_file = None # <- once selected contains dataframe
 		self.preference_file = None
 		self.completed_preference_file = None
 
@@ -78,6 +80,7 @@ class MainApplication(tk.Frame):
 
 		# user created
 		self.requirements = [] # empty list
+		self.save_location = None # Where the optimiation output will be saved
 
 		# Optimization Fields
 		self.optimization_output_directory = None
@@ -134,7 +137,7 @@ class MainApplication(tk.Frame):
 		tk.Label(self.file_select_frame, text=s).grid(row=3, column=1,
 			sticky="W")
 		tk.Button(self.file_select_frame, text="Select", 
-			command=self.get_secondary_file).grid(row=3, column=2)
+			command=self.get_teacher_file).grid(row=3, column=2)
 
 		# Make spreadsheet for student preferenfes, and LP input
 		s = "Step 4: Generate preference form: "
@@ -305,22 +308,26 @@ class MainApplication(tk.Frame):
 		intermediate_df = create_teacher_info(self.initial_file_df, dir_name)
 
 		# Create the final dataframe for LP input
-		self.LP_input = create_LP_input(intermediate_df)
+		self.LP_input = create_LP_input(intermediate_df, self.initial_file_df)
+		self.LP_input.to_csv("LP_Input.csv")
+		print(self.LP_input)
 		print(dir_name)
 
 
-	def get_secondary_file(self):
+	def get_teacher_file(self):
 		"""
 		gets the teacher file
 		"""
 		# get the file
-		self.secondary_file = askopenfilename()
+		self.teacher_file = askopenfilename()
 
 		# make the label
 		tk.Label(self.file_select_frame,
-			text = "  " + self.get_file_name(self.secondary_file)).grid(
+			text = "  " + self.get_file_name(self.teacher_file)).grid(
 			row = 3, column=3, sticky="W")
-			
+
+		self.teacher_file = pd.read_csv(self.teacher_file, header=None)
+
 
 	def make_preference_form(self):
 		print("Add Dae Won's script to generate form")
@@ -336,6 +343,15 @@ class MainApplication(tk.Frame):
 			).grid(row=5, column=3, sticky="W")
 
 		print("Run Justina's script to make LP input preferences")
+
+		# In the interum, as don't know where that script is
+		# just use the flattened for testing
+		s = "Waiting on Justina's Prefernce Script, for now, just select"
+		s+= " the flattened preference so we having some file to test with"
+		messagebox.showinfo("Alert", s)
+
+		self.preference_input = pd.read_csv(self.completed_preference_file)
+		print(self.preference_input)
 
 
 
@@ -478,7 +494,45 @@ class MainApplication(tk.Frame):
 		Seoncd: Checks the save location
 		print("Put your function here")
 		"""
-		pass
+
+		still_needed = []
+		# Verify the required information
+		if self.preference_input is None:
+			still_needed.append("Preferences")
+		if self.LP_input is None:
+			still_needed.append("LP_input")
+		if self.teacher_file is None:
+			still_needed.append("Teacher File (secondary)")
+
+		s = ""
+		if len(still_needed) > 0:
+			s = str(still_needed)
+			messagebox.showerror("Error", "You are missing the following\n\n" + s)
+			return 
+
+		GAP = self.slider.get()
+		print(GAP)
+		
+		print("All good")
+
+		# optimize_schedule(self.preference_input, self.LP_input, None,
+		# 	self.teacher_file, GAP, self.requirements, self.save_location)
+		# The none is for Grades, as I just hard coded that in the opt code for now
+
+		# Create optimization instance
+		O = Optimizer(self.preference_input, self.LP_input, None,
+				self.teacher_file, GAP, self.requirements, self.save_location)
+		O.optimize()
+
+
+
+
+
+		# Things we need to think abou thow to deal with:
+		# 	Grades
+		#	Proximity
+		#	
+
 
 
 ###

@@ -1,0 +1,100 @@
+,Course Name,Double Period,HS Category,MS Category,Max,Min,Number of Instances,Required Grades,Room Type
+0,6th Grade Art,,,C,22.0,10.0,,,Art
+1,7th-8th Grade Art,,,C,22.0,10.0,,,Art
+2,8th Grade Science,,,I,22.0,10.0,,8.0,Science
+3,Adaptive PE,,VII,E,22.0,10.0,,,Gym
+4,Advanced Algebra and Trigonometry,,IIC,,22.0,10.0,2.0,,
+5,Advanced Algebra and Trigonometry V2,,IIC,,22.0,10.0,2.0,,
+6,Advanced Spanish,,IIB,,22.0,10.0,,,
+7,Advanced/In-Depth French,,IIB,,22.0,10.0,,,
+8,African Studies,1.0,IIA & V,,22.0,10.0,,9.0,
+0,African Studies II,1.0,IIA & V,,22.0,10.0,,9.0,
+9,Algebra A,,,K,22.0,10.0,2.0,,
+10,Algebra A V2,,,K,22.0,10.0,2.0,,
+11,Algebra B,,,K,22.0,10.0,2.0,,
+12,Algebra B V2,,,K,22.0,10.0,2.0,,
+13,American Studies/Global Perspective,1.0,IIA & V,,22.0,10.0,,,
+1,American Studies/Global Perspective II,1.0,IIA & V,,22.0,10.0,,,
+14,Animal Bio,,VI,,22.0,10.0,,,
+15,Asia Studies,,V,,22.0,10.0,,,
+16,Banned Books,,,G,22.0,10.0,,,
+17,Beginning Algebra and Geometry,,IIC,,22.0,10.0,2.0,,
+18,Beginning Algebra and Geometry V2,,IIC,,22.0,10.0,2.0,,
+19,Celtic Band,,IV,D,22.0,10.0,,,Music
+20,Chemistry,,VI,,22.0,10.0,,,Science
+21,Childhood in Conflict,1.0,,G & H,22.0,10.0,,,
+2,Childhood in Conflict II,1.0,,G & H,22.0,10.0,,,
+22,Choir,,IV,D,22.0,10.0,,,Music
+23,Community Service Class,,IB & V,,22.0,10.0,,,
+24,Computer Literacy,,,L,22.0,10.0,,,
+25,Constitutional Law/Government,,V,,22.0,10.0,,,
+26,Dark Fiction,,IIA & V,,22.0,10.0,,,
+27,Drawing and Painting,,IV,,22.0,10.0,,,Art
+28,Ecology,,VI,,22.0,10.0,,,
+29,Economics,,V,,22.0,10.0,,,
+30,Empty,,,,22.0,10.0,,,
+31,English Seminar,,IIA,,22.0,10.0,,,
+32,Evolutionary Biology,,VI,,22.0,10.0,,,
+33,Facing History,1.0,IIA & V,,22.0,10.0,,,
+3,Facing History II,1.0,IIA & V,,22.0,10.0,,,
+34,Fiber Tech,,,I,22.0,10.0,,,
+35,French A,,,F,22.0,10.0,,,
+36,French B,,,F,22.0,10.0,,,
+37,Geography and Borders,,,H,22.0,10.0,,,
+38,Geology,,VI,,22.0,10.0,,,
+39,Global History of Commodities,,,H,22.0,10.0,,,
+40,HS Health,,VII,,22.0,10.0,,,
+41,HS PE,,VII,,22.0,10.0,3.0,,Gym
+42,HS PE V2,,VII,,22.0,10.0,3.0,,Gym
+43,HS PE V3,,VII,,22.0,10.0,3.0,,Gym
+44,I Know Some Things,,IIA,,22.0,10.0,,,
+45,Immigration and Migration,,IIA,,22.0,10.0,,,
+46,In-Depth Spanish,,IIB,,22.0,10.0,,,
+47,Inquiry and Tools,1.0,,I & K,22.0,10.0,2.0,6.0,
+4,Inquiry and Tools II,1.0,,I & K,22.0,10.0,2.0,6.0,
+48,Inquiry and Tools V2,1.0,,I & K,22.0,10.0,2.0,6.0,
+5,Inquiry and Tools V2 II,1.0,,I & K,22.0,10.0,2.0,6.0,
+49,Intermediate Algebra and Geometry,,IIC,,22.0,10.0,2.0,,
+50,Intermediate Algebra and Geometry V2,,IIC,,22.0,10.0,2.0,,
+51,Intermediate French,,IIB,F,22.0,10.0,,,
+52,Intermediate Spanish,,IIB,F,22.0,10.0,,,
+53,Intro to Engineering,,,I,22.0,10.0,,,Science
+54,Intro to Physics and Chemistry,,VI,I,22.0,10.0,,,Science
+55,Latin American Studies,1.0,IIA & V,,22.0,10.0,,9.0,
+6,Latin American Studies II,1.0,IIA & V,,22.0,10.0,,9.0,
+56,Literature of Civil Rights Movement,,IIA,,22.0,10.0,,,
+57,MS Chemistry,,,I,22.0,10.0,,,Science
+58,MS Health,,,J,22.0,10.0,,,
+59,MS PE,,,E,22.0,10.0,,,Gym
+60,MS/HS PE,,VII,E,22.0,10.0,3.0,,Gym
+61,MS/HS PE V2,,VII,E,22.0,10.0,3.0,,Gym
+62,MS/HS PE V3,,VII,E,22.0,10.0,3.0,,Gym
+63,Music Design,,IV,D,22.0,10.0,,,Music
+64,"Music, Myth, and Ritual",,,D,22.0,10.0,,,Music
+65,Other,,Z,Z,22.0,10.0,6.0,,
+66,Other V2,,Z,Z,22.0,10.0,6.0,,
+67,Other V3,,Z,Z,22.0,10.0,6.0,,
+68,Other V4,,Z,Z,22.0,10.0,6.0,,
+69,Other V5,,Z,Z,22.0,10.0,6.0,,
+70,Other V6,,Z,Z,22.0,10.0,6.0,,
+71,People and Literature,1.0,,G & H,22.0,10.0,2.0,6.0,
+7,People and Literature II,1.0,,G & H,22.0,10.0,2.0,6.0,
+72,People and Literature V2,1.0,,G & H,22.0,10.0,2.0,6.0,
+8,People and Literature V2 II,1.0,,G & H,22.0,10.0,2.0,6.0,
+73,Physics,,VI,,22.0,10.0,,,Science
+74,Poet's Society,,,G,22.0,10.0,,,
+75,Portfolio Art,,IV,,22.0,10.0,,,Art
+76,Portfolio Photo,,IV,,22.0,10.0,,,Art
+77,Pre-Calculus,,IIC,,22.0,10.0,,,
+78,Probability and Statistics,,IIC,,22.0,10.0,,,
+79,Researchers,,,M,22.0,10.0,,,
+80,Resource Room,,Other,Other,22.0,10.0,,,Resource
+81,Spanish A,,,F,22.0,10.0,2.0,,
+82,Spanish A V2,,,F,22.0,10.0,2.0,,
+83,Spanish B,,,F,22.0,10.0,2.0,,
+84,Spanish B V2,,,F,22.0,10.0,2.0,,
+85,Story of Life,,,I,22.0,10.0,,,
+86,Studio Art,,IV,,22.0,10.0,,,Art
+87,US History and Lit: The 20th Century,1.0,IIA & V,,22.0,10.0,,,
+9,US History and Lit: The 20th Century II,1.0,IIA & V,,22.0,10.0,,,
+88,Video Production,,IV,,22.0,10.0,,,
