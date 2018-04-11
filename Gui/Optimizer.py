@@ -21,7 +21,18 @@ from Requirement import *
 
 class Optimizer():
 	"""
-	Description
+	This class sets up a SCIP instance of our schedule optimization model
+	it takes in various data files (in the form of Pandas DataFrames)
+	It then extracts the relevant information and creates the model
+	the various constraint groups are seperated and added by individual methods
+	to help with debugging as input is changed
+
+	There is a seperate method to run the optimization
+	then there is a method to save the result
+
+	There WILL BE methods to display and save the solutions in meaningful ways
+	to users, such as saving text files with student schedules, master schedules
+	etc.
 
 	Main Fields
 	-----------
@@ -65,7 +76,7 @@ class Optimizer():
 
 	"""
 
-	def __init__(self, prefs, LP_input, grades, teacher, GAP, requirements=None,
+	def __init__(self, prefs, LP_input, grades, teacher, GAP, requirements=[],
 			prox=None, save_location=None):
 		"""
 		Sets up main fields, and calls other methods to parse data into required
@@ -121,6 +132,11 @@ class Optimizer():
 		self.constrained_rooms = None
 		self.constrained_courses = None
 
+		self.XV = {}
+		self.CourseV = {}
+		self.RoomV = {}
+		self.UV = {}
+
 
 
 		# main LP_input
@@ -154,6 +170,9 @@ class Optimizer():
 		# Create model
 		self.m = Model()
 
+		# Quick shortening to see if it works?
+		self.S = self.S[:50]
+
 		# Add Variables
 		print("Adding Variables")
 		self.add_variables()
@@ -161,10 +180,12 @@ class Optimizer():
 		# Add constraints
 		print("Adding Constraints")
 		self.add_basic_constraints()
-		self.add_proximity_constraints()
+		self.add_max_constraint()
+		#self.add_min_constraint()
+		#self.add_proximity_constraints()
 		self.add_teacher_constraints()
 		self.add_course_constraints()
-		self.add_grade_level_requirements()
+		#self.add_grade_level_requirements()
 		self.add_room_constraints()
 		self.add_period_constraints()
 		print("Constraints Added")
@@ -216,7 +237,7 @@ class Optimizer():
 		self.I = list(set(self.teacher[0]))
 
 		# Grades for each student
-		self.Grades = grades[1]
+		self.Grades = grades['1']
 
 		# Extract Preferences
 		self.P = self.prefs.drop("Student", axis=1).as_matrix()
@@ -445,11 +466,22 @@ class Optimizer():
 		print("\tU set-up constraints (`and`) added")
 
 
-		# Add capacity and minimum constraint
+	def add_max_constraint(self):
+		"""
+		Adds max capacity constraint
+		"""
 		for j in range(len(self.C)):
 			self.m.addCons(quicksum(self.X[i,j] for i in self.S) <= self.MAX[j])
+		print("\tMax course capacity")
+
+
+	def add_min_constraint(self):
+		"""
+		Adds min capacity constraint
+		"""
+		for j in range(len(self.C)):
 			self.m.addCons(quicksum(self.X[i,j] for i in self.S) >= self.MIN[j])
-		print("\tCourse capacity")
+		print("\tMin capacity constraint")
 
 
 	def add_proximity_constraints(self):
@@ -530,10 +562,38 @@ class Optimizer():
 		"""
 		Adds theg grade level requirements that are specified via the GUI
 		"""
-		print("\n\nSTILL NEED TO IMPLEMENT THE REQUIREMENT CONSTRAINTS\n\n")
-		print("in this, we should think about forcing them in the first few")
-		print("periods, or we could try to add that to the objective")
-		pass
+		# Get list of course names to find index later
+		l = list(self.Cd.values())
+
+		for req in self.requirements:
+			# get indicies for courses:
+			index1 = l.index(req.course1)
+			if req.course2 is not None:
+				index2 = l.index(req.course2)
+			else:
+				index2 = None
+
+			# determine if multi-index course
+			multi_1 = [index1] #<-- therefore can use even if not multi later
+			if index2 is not None:
+				multi_2 = [index2]
+			for m in self.multi_nested_list:
+				if index1 in m:
+					multi_1 = m # <-- contains list of indicies that also qualify
+				if (index2 is not None) and (index2 in m):
+					multi_2 = m
+
+			# Combine the two index lists (if there are two)
+			if index2 is not None:
+				multi = multi_1 + multi_2
+			else:
+				multi = multi_1
+
+			# Add constraint
+			for i in self.S:
+				if self.Grades[i] == req.grade:
+					self.m.addCons(quicksum(self.X[i,j] for j in multi) == 1)
+
 
 
 	def add_room_constraints(self):
@@ -620,9 +680,140 @@ class Optimizer():
 		"""
 		Runs the optimization sequence
 		"""
-		print("-"*30 + "Optimization Starting" + "-"*30)
+		print("-"*30 + " Optimization Starting " + "-"*30)
 		self.m.optimize()
 
+	def assign_value_dicts(self):
+		"""
+		Once the optimization is completed, call this function
+		to fill in the following dictionaries
+			XV
+			CourseV
+			RV
+			UV
+		"""
+		XV = {}
+		CourseV = {}
+		for i in self.S:
+			for j in range(len(self.C)):
+				# get student variable
+				XV[i,j] = self.get_value(self.X[i,j])
+				for t in self.T:
+					CourseV[j,t] = self.get_value(self.Course[j,t])
+		# get rooms
+		RoomV = {}
+		# for j in range(len(C)):
+		for j in self.c_mini:
+			for s in self.R:
+				for t in self.T:
+					RoomV[j,s,t] = self.get_value(self.Rv[j,s,t])
+
+		UV = {}
+		for i in self.S:
+			for j in self.Cd:
+				for t in self.T:
+					UV[i,j,t] = self.get_value(self.U[i,j,t])
+
+		# assign fields
+		self.XV = XV
+		self.CourseV = CourseV
+		self.RoomV = RoomV
+		self.UV = UV
+
+
+	def get_value(self, var):
+		"""
+		Takes in a variable, and if the model is done running,
+		will return the value.
+		Deals with SCIP being weird about binary variables
+		"""
+		v = self.m.getVal(var)
+		if v < 0.75:
+			return 0
+		else:
+			return 1
+
+	def get_enrollment(self, course):
+		"""
+		takes in a course index corrseponding to a course in Cd
+		and returns the number of students enrolled
+		Note: Assumes the variable value dictionaries have already been defined
+		"""
+		num_enrolled = 0
+		for i in self.S:
+			if self.XV[i,course] == 1:
+				num_enrolled += 1
+		return num_enrolled
+
+
+	def get_teacher(self, course):
+		"""
+		Takes in a course ID and retunrs the teachers name
+		"""
+		for k in range(len(self.I)):
+			if self.Ta[k][course] == 1:
+				return self.I[k]
+		# if no teacher (other, or empty)
+		return ""
+
+	def get_room(self, course, period):
+		"""
+		Returns string of room that `course` is taugh in durring `period`
+		Note: Value dictionries must be filled in
+		"""
+		if "Other" in self.Cd[course] or "Empty" in self.Cd[course]:
+			return "N/A"
+		for s in self.R:
+			if self.RoomV[course, s, period] == 1:
+				return s
+
+	def print_grid(self):
+		"""
+		Prints the grid version of schedule with info
+		Note: dictionaries must be filled in
+		"""
+		print("\n\n")
+		for t in self.T:
+			print("-"*20 + " " + "PERIOD " + str(t) + " " + "-"*110)
+			print("Room" + 36*" " + "Course" + 34*" " + "Enrollment" + " "*(40 - len("Enrollment")) + "Teacher")
+			print("-"*140)
+			# for j in range(len(C)):
+			for j in self.c_mini:
+				# if the course is offered
+				if self.CourseV[j,t] == 1:
+					# figure out which room
+					for s in self.R:
+						if self.RoomV[j,s,t] == 1:
+							num_enrolled = self.get_enrollment(j)
+							print(s + (40 - len(s))*"." + self.Cd[j] + (40 - len(self.Cd[j]))*"." \
+								+ str(num_enrolled) + "."*(40 - len(str(num_enrolled))) + self.get_teacher(j))
+			print("\n")
+
+	def print_student_schedule(self, student):
+		"""
+		takes in the index of a student and prints out their schedule
+		"""
+		# Get students grade
+		g = self.Grades[student]
+		print("Student " + str(student) + " (grade " + str(g) + ")")
+		print("-"*85)
+		for t in self.T:
+			for j in self.Cd:
+				if self.XV[student,j] == 1 and self.CourseV[j,t] == 1:
+					room = self.get_room(j,t)
+					teacher = self.get_teacher(j)
+					s1 = "Period " + str(t) + ": " + self.Cd[j]
+					#print "Period " + str(t) + ": " + Cd[j]
+					print( s1 + ((50-len(s1))*".") + room + ((20-len(room))*".") + teacher)
+
+
+	def print_all_student_schedules(self):
+		"""
+		Prints all student schedules
+		"""
+		for s in self.S:
+			self.print_student_schedule(s)
+			print("\n\n")
 
 
 
@@ -635,9 +826,13 @@ if __name__ == "__main__":
 	LP_input = pd.read_csv("OptTestFiles/LP_input.csv")
 	teacher = pd.read_csv("OptTestFiles/teacher.csv", header=None)
 	prefs = pd.read_csv("OptTestFiles/prefs.csv")
-	grades = pd.read_csv("OptTestFiles/grades.csv", header=None)
+	grades = pd.read_csv("OptTestFiles/grades.csv")
 	prox =pd.read_csv("OptTestFiles/prox.csv")
 
-	O = Optimizer(prefs, LP_input, grades, teacher, 1, None, prox, None)
+	O = Optimizer(prefs, LP_input, grades, teacher, 1, [], prox, None)
+	O.optimize()
+	O.assign_value_dicts()
+	O.print_grid()
+	O.print_all_student_schedules()
 
 
