@@ -18,7 +18,7 @@ from Optimizer import *
 
 # Helper functions
 from clean_data import *
-from optimize import *
+# from optimize import * # <-- Now use Optimizer class 
 
 import pandas as pd
 
