@@ -86,22 +86,25 @@ def create_LP_input(full_course_info, original_course_input):
 	double = all_info.copy()
 	double.dropna(subset=['Double Period'])
 	for index, row in all_info.loc[all_info['Double Period'] == 'Yes'].iterrows():
-	    c = row['Course Name'] + ' II'
-	    updated_row = row.copy()
-	    updated_row['Course Name'] = c
-	    updated_row['Double Period'] = 0
-	    add_double = add_double.append(updated_row, ignore_index=True)    
+		c = row['Course Name'] + ' II'
+		updated_row = row.copy()
+		updated_row['Course Name'] = c
+		updated_row['Double Period'] = 0
+		add_double = add_double.append(updated_row, ignore_index=True)    
 	all_info = pd.concat([all_info, add_double], axis=0).sort_values(by=['Course Name'])
 
 	# convert "yes" to 1, keep 0
 	all_info['Double Period'] = all_info['Double Period'].map({'Yes': 1, 0:0})
 	all_info.reset_index(drop=True)
-	all_info.to_csv(file_location + '/LP_Input.csv', index=False)
+	#all_info.to_csv(file_location + '/LP_Input.csv', index=False)
+	print("\n\n\nThis is what would be saved as LP Input:")
+	print(all_info)
 
 	return all_info
 
 
-def dept_proximity(file_location, input_file):
+# def dept_proximity(file_location, input_file):
+def dept_proximity(LP_input):
 	"""
 	Creates the proximity matrix that indicates if a course belongs to a department. 
 	Columns are departments, rows are all courses. 1 if the course is in the dept, 0
@@ -116,60 +119,62 @@ def dept_proximity(file_location, input_file):
 					Needs to be in the file_location directory
 	"""
 					
-    # columns are department, rows are course names
-    info = pd.read_csv(file_location + input_file, delimiter=',')
+	# columns are department, rows are course names
+	# info = pd.read_csv(file_location + input_file, delimiter=',')
+	info = LP_input
 
-    depts = info[["Course Name", "MS Category", "HS Category"]]
-    depts = depts.fillna(0)
+	depts = info[["Course Name", "MS Category", "HS Category"]]
+	depts = depts.fillna(0)
 
-    # iterate over depts
-    msd = set(depts["MS Category"])
-    msd.remove(0)
+	# iterate over depts
+	msd = set(depts["MS Category"])
+	msd.remove(0)
 
-    hsd = set(depts["HS Category"])
-    hsd.remove(0)
+	hsd = set(depts["HS Category"])
+	hsd.remove(0)
 
-    cols = msd.union(hsd)
-    single = [subject for subject in cols if '&' not in subject]
-    double = [subject for subject in cols if '&' in subject]
+	cols = msd.union(hsd)
+	single = [subject for subject in cols if '&' not in subject]
+	double = [subject for subject in cols if '&' in subject]
 
-    sim = pd.DataFrame(index=depts['Course Name'], columns=single)
+	sim = pd.DataFrame(index=depts['Course Name'], columns=single)
 
-    # 2nd period of double courses
-    second = np.array(info.loc[info['Double Period'] == 0]['Course Name'])
+	# 2nd period of double courses
+	second = np.array(info.loc[info['Double Period'] == 0]['Course Name'])
 
-    for d in cols:  
-        dept_courses_MS = depts["Course Name"].loc[depts["MS Category"] == d]
-        dept_courses_HS = depts["Course Name"].loc[depts["HS Category"] == d]
-        dept_courses = dept_courses_MS.append(dept_courses_HS, ignore_index=True)
-        for course in dept_courses:
+	for d in cols:  
+		dept_courses_MS = depts["Course Name"].loc[depts["MS Category"] == d]
+		dept_courses_HS = depts["Course Name"].loc[depts["HS Category"] == d]
+		dept_courses = dept_courses_MS.append(dept_courses_HS, ignore_index=True)
+		for course in dept_courses:
 
-            # set all 2nd part in double period to 0
-            if course in second:
-                if '&' in d:
-                    d1 = d.split(" ")[0]
-                    d2 = d.split(" ")[2]
+			# set all 2nd part in double period to 0
+			if course in second:
+				if '&' in d:
+					d1 = d.split(" ")[0]
+					d2 = d.split(" ")[2]
 
-                    sim.loc[course, d1]=0
-                    sim.loc[course, d2]=0
+					sim.loc[course, d1]=0
+					sim.loc[course, d2]=0
 
-                else:
-                    sim.loc[course, d] = 0
+				else:
+					sim.loc[course, d] = 0
 
-            elif d in single: 
-                sim.loc[course, d]=1
+			elif d in single: 
+				sim.loc[course, d]=1
 
-            else: #d in double
-                # get two depts
-                d1 = d.split(" ")[0]
-                d2 = d.split(" ")[2]
+			else: #d in double
+				# get two depts
+				d1 = d.split(" ")[0]
+				d2 = d.split(" ")[2]
 
-                sim.loc[course, d1]=1
-                sim.loc[course, d2]=1
+				sim.loc[course, d1]=1
+				sim.loc[course, d2]=1
 
 
-    sim = sim.fillna(0)            
-    sim.to_csv(file_location + '/Proximity.csv')
+	sim = sim.fillna(0)            
+	# sim.to_csv(file_location + '/Proximity.csv')
+	return sim
 
 
 

@@ -19,7 +19,7 @@ from MenuBar import *
 from Optimizer import *
 
 # Helper functions
-from clean_data import *
+import clean_data
 
 
 class MainApplication(tk.Frame):
@@ -63,6 +63,7 @@ class MainApplication(tk.Frame):
 		self.LP_input = None
 		self.teacher_df = None
 		self.preference_input_df = None
+		self.prox = None
 
 		self.requirements = []
 
@@ -224,7 +225,8 @@ class MainApplication(tk.Frame):
 		"""
 		# save the file name
 		initial_file_name = askopenfilename()
-		df = pd.read_csv(initial_file_name)
+		#df = pd.read_csv(initial_file_name)
+		df = pd.read_excel(initial_file_name) # <-- it is an excel file
 		self.initial_file_df = df
 
 		# make sure it has the right column header
@@ -271,12 +273,15 @@ class MainApplication(tk.Frame):
 
 		# Continue with file creation
 		dir_name = askdirectory()
-		intermediate_df = create_teacher_info(self.initial_file_df, dir_name)
+		intermediate_df = clean_data.create_teacher_info(self.initial_file_df, dir_name)
 		#				  ^^ function from Justina's clean_data
 
 		# Create the final dataframe for LP input
-		self.LP_input = create_LP_input(intermediate_df, self.initial_file_df)
+		self.LP_input = clean_data.create_LP_input(intermediate_df, self.initial_file_df)
 		#               ^^ function from Justina
+
+		# Create the proximity matrix
+		self.prox = clean_data.dept_proximity(self.LP_input)
 		
 		# self.LP_input.to_csv("LP_Input.csv")
 		# print(self.LP_input)
@@ -294,7 +299,6 @@ class MainApplication(tk.Frame):
 		tk.Label(self.file_select_frame,
 			text = "  " + self.get_file_name(teacher_file_name)).grid(
 			row = 3, column=3, sticky="W")
-
 		self.teacher_df = pd.read_csv(teacher_file_name) # there is a header
 		print(self.teacher_df)
 
@@ -466,14 +470,21 @@ class MainApplication(tk.Frame):
 
 		still_needed = []
 		# Verify the required information
-		if self.preference_input is None:
+		if self.preference_input_df is None:
 			still_needed.append("Preferences")
+		# else:
+		# 	# save it down for optimizer debugging
+		# 	self.preference_input_df.to_csv("OptTestFiles/prefs2.csv")
 		if self.LP_input is None:
 			still_needed.append("LP_input")
+		# else:
+		# 	self.LP_input.to_csv("OptTestFiles/LP_input2.csv")
 		if self.teacher_df is None:
 			still_needed.append("Teacher File (secondary)")
-		if self.optimization_output_directory is None:
-			still_needed.appned("Save location for optimization")
+		# else:
+		# 	self.teacher_df.to_csv("OptTestFiles/teacher2.csv")
+		# if self.optimization_output_directory is None:
+		# 	still_needed.append("Save location for optimization")
 
 		s = ""
 		if len(still_needed) > 0:
@@ -485,11 +496,57 @@ class MainApplication(tk.Frame):
 		GAP = self.slider.get()
 
 		# Create optimization instance
-		O = Optimizer(self.preference_input, self.LP_input, None,
-				self.teacher_df, GAP, self.requirements, 
-				self.optimization_output_directory)
-		O.optimize()
+		# THIS CALL NEEDS TO BE FIXED; MAKE SURE EVERYTHING IN RIGHT SPOT
 
+		# Temp of grade file, this should eventually come from the form
+		grades = pd.DataFrame({'0':[1,2], '1':[8,9]})
+
+		# # for debugging, output all the files you are sending
+		# self.preference_input_df.to_csv("test_pref_input_df.csv")
+		# self.LP_input.to_csv("test_LP_input.csv")
+		# self.teacher_df.to_csv("test_teacher_Df.csv")
+		# self.prox.to_csv("test_prox.csv")
+
+		self.LP_input.to_csv("intermediate_LP_input.csv")
+		self.LP_input = pd.read_csv("intermediate_LP_input.csv")
+		self.teacher_df.to_csv("intermediate_teacher_df.csv")
+		self.teacher_df = pd.read_csv("intermediate_teacher_df.csv")
+
+
+		# test re-index
+		#self.LP_input = self.LP_input.reindex(range(self.LP_input.shape[0]))
+
+		O = Optimizer(prefs = self.preference_input_df,
+					LP_input = self.LP_input, 
+					grades = grades,
+					teacher = self.teacher_df,
+					GAP = GAP,
+					requirements = self.requirements,
+					prox = self.prox,
+					save_location  = self.optimization_output_directory)
+
+		print("Adding Constraints")
+		O.add_basic_constraints()
+		O.add_max_constraint()
+		#self.add_min_constraint()
+		O.add_proximity_constraints()
+		O.add_teacher_constraints()
+		O.add_course_constraints()
+		#self.add_grade_level_requirements()
+		print("\n\n\n")
+		print(O.Cd)
+		print("\n\n")
+		O.add_room_constraints()
+		O.add_period_constraints()
+		print("Constraints Added")
+
+		O.set_objective()
+
+		O.optimize()
+		O.assign_value_dicts()
+		O.print_grid()
+		O.print_all_student_schedules()
+		O.diagnostic()
 
 
 

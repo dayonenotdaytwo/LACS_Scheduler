@@ -1,0 +1,101 @@
+,Course Name,Double Period,HS Category,MS Category,Max,Min,Number of Instances,Required Grades,Room Type
+0,6th Grade Art,,,C,22.0,10.0,,,Art
+1,7th-8th Grade Art,,,C,22.0,10.0,,,Art
+2,8th Grade Science,,,I,22.0,10.0,,8.0,Science
+3,Adaptive PE,,VII,E,22.0,10.0,,,Gym
+4,Advanced Algebra and Trigonometry,,IIC,,22.0,10.0,2.0,,
+5,Advanced Algebra and Trigonometry V2,,IIC,,22.0,10.0,2.0,,
+6,Advanced Spanish,,IIB,,22.0,10.0,,,
+7,Advanced/In-Depth French,,IIB,,22.0,10.0,,,
+8,African Studies,1.0,IIA & V,,22.0,10.0,,9.0,
+0,African Studies II,0.0,IIA & V,,22.0,10.0,,9.0,
+9,Algebra A,,,K,22.0,10.0,2.0,,
+10,Algebra A V2,,,K,22.0,10.0,2.0,,
+11,Algebra B,,,K,22.0,10.0,2.0,,
+12,Algebra B V2,,,K,22.0,10.0,2.0,,
+13,American Studies/Global Perspective,1.0,IIA & V,,22.0,10.0,,,
+1,American Studies/Global Perspective II,0.0,IIA & V,,22.0,10.0,,,
+14,Animal Bio,,VI,,22.0,10.0,,,
+15,Asia Studies,,V,,22.0,10.0,,,
+16,Beginning Algebra and Geometry,,IIC,,22.0,10.0,3.0,,
+17,Beginning Algebra and Geometry V2,,IIC,,22.0,10.0,3.0,,
+18,Beginning Algebra and Geometry V3,,IIC,,22.0,10.0,3.0,,
+19,Chemistry,,VI,,22.0,10.0,,,Science
+20,Civil Rights Literature,,IIA,,,,,,
+21,Community Service Class,,IB & V,,22.0,10.0,,,
+22,Computer Literacy,,,G,22.0,10.0,,,
+23,Computer Science,,IIC,K,,,,,
+24,Drawing and Painting,,IV,,22.0,10.0,,,Art
+25,Empty,,,,22.0,10.0,,,
+26,English Seminar,,IIA,,22.0,10.0,,,
+27,Evolutionary Biology,,VI,,22.0,10.0,,,
+28,Experimenting in Sci,,,,,,,,
+29,Facing History,1.0,IIA & V,,22.0,10.0,,,
+2,Facing History II,0.0,IIA & V,,22.0,10.0,,,
+30,Fantasy and Folklore,,,G,,,,,
+31,Fiber Tech,,,I,22.0,10.0,,,
+32,French A,,,F,22.0,10.0,,,
+33,French B,,,F,22.0,10.0,,,
+34,Geology,,VI,,22.0,10.0,,,
+35,Global Research,,V,,,,,,
+36,HS English TBA,,IIA,,,,,,
+37,HS Health,,VII,,22.0,10.0,,,
+38,HS PE,,VII,,22.0,10.0,3.0,,Gym
+39,HS PE V2,,VII,,22.0,10.0,3.0,,Gym
+40,HS PE V3,,VII,,22.0,10.0,3.0,,Gym
+41,I Know Some Things,,IIA,,22.0,10.0,,,
+42,In-Depth French,,IIB,,22.0,10.0,,,
+43,In-Depth Spanish,,IIB,,22.0,10.0,,,
+44,Inquiry and Tools,1.0,,I & K,22.0,10.0,2.0,6.0,
+3,Inquiry and Tools II,0.0,,I & K,22.0,10.0,2.0,6.0,
+45,Inquiry and Tools V2,1.0,,I & K,22.0,10.0,2.0,6.0,
+4,Inquiry and Tools V2 II,0.0,,I & K,22.0,10.0,2.0,6.0,
+46,Intermediate Algebra and Geometry,,IIC,,22.0,10.0,2.0,,
+47,Intermediate Algebra and Geometry V2,,IIC,,22.0,10.0,2.0,,
+48,Intermediate French,,IIB,F,22.0,10.0,,,
+49,Intermediate Spanish,,IIB,F,22.0,10.0,2.0,,
+50,Intermediate Spanish V2,,IIB,F,22.0,10.0,2.0,,
+51,Intro to Physics and Chemistry,,VI,I,22.0,10.0,,,Science
+52,Latin American Literature,,IIA,,,,,,
+53,MS English and Social Studies TBA,1.0,,G & H,,,,,
+5,MS English and Social Studies TBA II,0.0,,G & H,,,,,
+54,MS Health,,,J,22.0,10.0,,,
+55,MS Science,,,,,,2.0,,
+56,MS Science V2,,,,,,2.0,,
+57,MS/HS PE,,VII,E,22.0,10.0,3.0,,Gym
+58,MS/HS PE V2,,VII,E,22.0,10.0,3.0,,Gym
+59,MS/HS PE V3,,VII,E,22.0,10.0,3.0,,Gym
+60,Music Design,,IV,D,22.0,10.0,,,Music
+61,"Music, Myth, and Ritual",,,D,22.0,10.0,,,Music
+62,Musicals and History,,,H,,,,,
+63,Mythology,,,G,,,,,
+64,Neuro Science Psych,,VI,,,,,,
+65,Other,,Z,Z,22.0,10.0,6.0,,
+66,Other V2,,Z,Z,22.0,10.0,6.0,,
+67,Other V3,,Z,Z,22.0,10.0,6.0,,
+68,Other V4,,Z,Z,22.0,10.0,6.0,,
+69,Other V5,,Z,Z,22.0,10.0,6.0,,
+70,Other V6,,Z,Z,22.0,10.0,6.0,,
+71,People and Literature,1.0,,G & H,22.0,10.0,2.0,6.0,
+6,People and Literature II,0.0,,G & H,22.0,10.0,2.0,6.0,
+72,People and Literature V2,1.0,,G & H,22.0,10.0,2.0,6.0,
+7,People and Literature V2 II,0.0,,G & H,22.0,10.0,2.0,6.0,
+73,Physics,,VI,,22.0,10.0,,,Science
+74,Portfolio Art,,IV,,22.0,10.0,,,Art
+75,Portfolio Photo,,IV,,22.0,10.0,,,Art
+76,Pre-Calculus,,IIC,,22.0,10.0,,,
+77,Probability and Statistics,,IIC,,22.0,10.0,,,
+78,Researchers,,,M,22.0,10.0,,,
+79,Roots Music,,,D,,,,,
+80,Social Studies (BE),,,H,,,,,
+81,Spanish A,,,F,22.0,10.0,2.0,,
+82,Spanish A V2,,,F,22.0,10.0,2.0,,
+83,Spanish B,,,F,22.0,10.0,2.0,,
+84,Spanish B V2,,,F,22.0,10.0,2.0,,
+85,Street Band,,IV,D,,,,,
+86,Studio Art,,IV,,22.0,10.0,,,Art
+87,The Renaissance,,V,,,,,,
+88,US History and Lit: The 20th Century,1.0,IIA & V,,22.0,10.0,,,
+8,US History and Lit: The 20th Century II,0.0,IIA & V,,22.0,10.0,,,
+89,Utopia/Dystopia,,IIA,,,,,,
+90,Video Production,,IV,,22.0,10.0,,,
