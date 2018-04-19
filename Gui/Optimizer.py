@@ -152,8 +152,10 @@ class Optimizer():
 		self.prefs = prefs.rename(columns={"Unnamed: 0": "Student"})
 
 		# Place holders untill full data is made
-		self.prox = pd.read_csv("../Resources/Proximity.csv")
-		self.grades = pd.read_csv("../Resources/grades.csv", header=None)
+		self.prox = prox
+		self.grades = grades
+		#self.prox = pd.read_csv("../Resources/Proximity.csv")
+		#self.grades = pd.read_csv("../Resources/grades.csv", header=None)
 
 		# Pull sets
 		self.pull_sets()
@@ -177,20 +179,20 @@ class Optimizer():
 		print("Adding Variables")
 		self.add_variables()
 
-		# Add constraints
-		print("Adding Constraints")
-		self.add_basic_constraints()
-		self.add_max_constraint()
-		#self.add_min_constraint()
-		#self.add_proximity_constraints()
-		self.add_teacher_constraints()
-		self.add_course_constraints()
-		#self.add_grade_level_requirements()
-		self.add_room_constraints()
-		self.add_period_constraints()
-		print("Constraints Added")
+		# # Add constraints
+		# print("Adding Constraints")
+		# self.add_basic_constraints()
+		# self.add_max_constraint()
+		# #self.add_min_constraint()
+		# #self.add_proximity_constraints()
+		# self.add_teacher_constraints()
+		# self.add_course_constraints()
+		# #self.add_grade_level_requirements()
+		# self.add_room_constraints()
+		# self.add_period_constraints()
+		# print("Constraints Added")
 
-		self.set_objective()
+		# self.set_objective()
 		# You must explicitly call the optimize method to run
 
 
@@ -220,7 +222,8 @@ class Optimizer():
 
 		# Courses
 		self.Cd = {}
-		for i in self.df.index:
+		#for i in self.df.index:
+		for i in range(self.df.shape[0]): 
 			self.Cd[i] = self.df["Course Name"].iloc[i]
 
 		self.C = range(len(self.Cd))
@@ -234,10 +237,10 @@ class Optimizer():
 		self.T = [1,2,3,4,7,8] # Periods
 
 		# Instructors and corerspondence
-		self.I = list(set(self.teacher[0]))
+		self.I = list(set(self.teacher["Teacher Name"]))
 
 		# Grades for each student
-		self.Grades = grades['1']
+		self.Grades = self.grades['1']
 
 		# Extract Preferences
 		self.P = self.prefs.drop("Student", axis=1).as_matrix()
@@ -260,7 +263,8 @@ class Optimizer():
 		self.MAX = self.MAX.values
 
 		# Proximity Matrix
-		self.D = prox.drop("0", axis=1).as_matrix()
+		# self.D = prox.drop("0", axis=1).as_matrix() # <-- no longer that column
+		self.D = self.prox.as_matrix()
 
 		# Create Proximity dictionary {subject:proximity vector}
 		self.prox_dict = {}
@@ -319,7 +323,7 @@ class Optimizer():
 		for i in self.I:
 			I_C_dict[i] = []
 			for index in range(self.teacher.shape[0]):
-				if self.teacher.iloc[index][0] == i:
+				if self.teacher.iloc[index]["Teacher Name"] == i:
 					l = I_C_dict[i]
 					l.append(self.teacher.iloc[index][1])
 					I_C_dict[i] = l
@@ -488,8 +492,30 @@ class Optimizer():
 		"""
 		Adds the proximity constraints
 		"""
-		print("\n\n\nTHE PROXIMITY CONSTRAINTS HAVE NOT BEEN IMPLEMENTED\n\n\n")
-		pass 
+
+		# Setup proximity min and max dicts (temp untill we generate more granular data)
+		min_sub_dict = {}
+		max_sub_dict = {}
+		for subject in self.prox_dict.keys():
+			min_sub_dict[subject] = np.ones(len(self.S))*0
+			max_sub_dict[subject] = np.ones(len(self.S))*3 
+
+		for subject in self.prox_dict.keys():
+			if subject != "Other":
+				for i in self.S:
+					# Only add the minimum constraint if meaningful
+					if min_sub_dict[subject][i] > 0:
+						self.m.addCons(quicksum(self.prox_dict[subject][j]*self.X[i,j]
+						 for j in range(len(self.C))) >= min_sub_dict[subject][i])
+
+					# Always add the max constraint
+					self.m.addCons(quicksum(self.prox_dict[subject][j]*self.X[i,j]
+								 for j in self.C) <= max_sub_dict[subject][i])
+		
+		print("\tProximity constraint added")
+
+
+
 
 
 	def add_teacher_constraints(self):
@@ -501,8 +527,8 @@ class Optimizer():
 		for k in range(len(self.I)):
 			for t in self.T:
 				# m.addConstr(quicksum(Course[j,t]*Ta[k][j] for j in C) <= 1)
-				self.m.addCons(quicksum(self.Course[j,t]*self.Ta[k][j] 
-						for j in self.C) <= 1)
+				if np.sum(self.Ta[k]) > 0:
+					self.m.addCons(quicksum(self.Course[j,t]*self.Ta[k][j] for j in self.C) <= 1)
 		print("\tTeacher teaches as most once per period")
 
 
@@ -637,6 +663,9 @@ class Optimizer():
 		for subject in self.room_constrained_subjects:
 			sub_courses = self.constrained_courses[subject] # coruses in this subject
 			sub_rooms = self.constrained_rooms[subject] # appropriate rooms
+			print("Subject:", subject)
+			for j in sub_courses:
+				print("\t", self.Cd[j])
 			for j in sub_courses:
 				for t in self.T:
 					# m.addConstr(quicksum(Rv[j,s,t] for s in sub_rooms) == Course[j,t])
@@ -815,6 +844,26 @@ class Optimizer():
 			self.print_student_schedule(s)
 			print("\n\n")
 
+	def diagnostic(self):
+		"""
+		gives a preference score for each student, and indicates, if they
+		were assigned to any course the did not want
+		"""
+		for i in self.S:
+			pref_score = 0
+			bad_assignments = []
+			for j in self.C:
+				# if assigned to course
+				if self.XV[i,j] == 1:
+					# did they want it?
+					if self.P[i,j] > 0 :
+						pref_score += self.P[i,j]
+					else:
+						bad_assignments.append(self.Cd[j])
+			s = "Student " + str(i) + " gets score " + str(pref_score)
+			if bad_assignments != []:
+				s += "(badly assigned to " + str(bad_assignments) + ")"
+			print(s)
 
 
 if __name__ == "__main__":
@@ -823,16 +872,49 @@ if __name__ == "__main__":
 	"""
 
 	# gets files
-	LP_input = pd.read_csv("OptTestFiles/LP_input.csv")
-	teacher = pd.read_csv("OptTestFiles/teacher.csv", header=None)
-	prefs = pd.read_csv("OptTestFiles/prefs.csv")
-	grades = pd.read_csv("OptTestFiles/grades.csv")
-	prox =pd.read_csv("OptTestFiles/prox.csv")
+	# LP_input = pd.read_csv("OptTestFiles/LP_input2.csv")
+	# teacher = pd.read_csv("OptTestFiles/teacher2.csv")
+	# prefs = pd.read_csv("OptTestFiles/prefs2.csv")
+	# #grades = pd.read_csv("OptTestFiles/grades.csv")
+	# grades = pd.DataFrame({'0':[1,2], '1':[8,9]})
+	# prox =pd.read_csv("OptTestFiles/prox2.csv")
 
-	O = Optimizer(prefs, LP_input, grades, teacher, 1, [], prox, None)
-	O.optimize()
-	O.assign_value_dicts()
-	O.print_grid()
-	O.print_all_student_schedules()
+
+	LP_input = pd.read_csv("test_LP_input.csv")
+	teacher = pd.read_csv("test_teacher_Df.csv")
+	prefs = pd.read_csv("test_pref_input_df.csv")
+	#grades = pd.read_csv("OptTestFiles/grades.csv")
+	grades = pd.DataFrame({'0':[1,2], '1':[8,9]})
+	prox =pd.read_csv("test_prox.csv")
+
+	O = Optimizer(prefs = prefs,
+					LP_input = LP_input,
+					grades = grades,
+					teacher = teacher,
+					GAP = 0,
+					requirements = [],
+					prox = prox,
+					save_location = None)
+	# Add constraints
+	print("Adding Constraints")
+	O.add_basic_constraints()
+	O.add_max_constraint()
+	#self.add_min_constraint()
+	O.add_proximity_constraints()
+	O.add_teacher_constraints()
+	O.add_course_constraints()
+	#self.add_grade_level_requirements()
+	O.add_room_constraints()
+	O.add_period_constraints()
+	print("Constraints Added")
+
+	O.set_objective()
+
+
+	# O.optimize()
+	# O.assign_value_dicts()
+	# O.print_grid()
+	# O.print_all_student_schedules()
+	# O.diagnostic()
 
 
