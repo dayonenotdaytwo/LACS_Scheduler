@@ -218,7 +218,8 @@ class Optimizer():
 		"""
 
 		# Students
-		self.S = self.prefs["Student"].tolist() # list of all students (once we get ID make dictionary)
+		# self.S = self.prefs["Student"].tolist() # list of all students (once we get ID make dictionary)
+		self.S = list(self.prefs.index)
 
 		# Courses
 		self.Cd = {}
@@ -243,7 +244,8 @@ class Optimizer():
 		self.Grades = self.grades['1']
 
 		# Extract Preferences
-		self.P = self.prefs.drop("Student", axis=1).as_matrix()
+		#self.P = self.prefs.drop("Student", axis=1).as_matrix()
+		self.P = self.prefs.as_matrix()
 
 		# Double periods
 		self.Db = self.df["Double Period"].fillna(0).astype(int)
@@ -663,9 +665,6 @@ class Optimizer():
 		for subject in self.room_constrained_subjects:
 			sub_courses = self.constrained_courses[subject] # coruses in this subject
 			sub_rooms = self.constrained_rooms[subject] # appropriate rooms
-			print("Subject:", subject)
-			for j in sub_courses:
-				print("\t", self.Cd[j])
 			for j in sub_courses:
 				for t in self.T:
 					# m.addConstr(quicksum(Rv[j,s,t] for s in sub_rooms) == Course[j,t])
@@ -818,6 +817,33 @@ class Optimizer():
 								+ str(num_enrolled) + "."*(40 - len(str(num_enrolled))) + self.get_teacher(j))
 			print("\n")
 
+	def save_grid(self, file_name):
+		"""
+		Takes in a file name, and saves the grid to a text file at that location
+		Largely, mirrors the print_grid function, just with saves
+
+		Expected that file has .txt extension already
+		"""
+		if self.save_location is not None:
+			file_name = self.save_location + "/" + file_name
+		file = open(file_name, "w")
+		for t in self.T:
+			file.write("-"*20 + " " + "PERIOD " + str(t) + " " + "-"*110 + "\n")
+			file.write("Room" + 36*" " + "Course" + 34*" " + "Enrollment" + " "*(40 - len("Enrollment")) + "Teacher" + "\n")
+			file.write("-"*140 + "\n")
+			# for j in range(len(C)):
+			for j in self.c_mini:
+				# if the course is offered
+				if self.CourseV[j,t] == 1:
+					# figure out which room
+					for s in self.R:
+						if self.RoomV[j,s,t] == 1:
+							num_enrolled = self.get_enrollment(j)
+							file.write(s + (40 - len(s))*"." + self.Cd[j] + (40 - len(self.Cd[j]))*"." \
+								+ str(num_enrolled) + "."*(40 - len(str(num_enrolled))) + self.get_teacher(j) + "\n")
+			file.write("\n")
+
+
 	def print_student_schedule(self, student):
 		"""
 		takes in the index of a student and prints out their schedule
@@ -836,6 +862,28 @@ class Optimizer():
 					print( s1 + ((50-len(s1))*".") + room + ((20-len(room))*".") + teacher)
 
 
+	def save_student_schedule(self, student, file_name):
+		"""
+		Takes in an index of a student, as well as the name of .txt file, 
+		and saves the student's schedule to the new text file
+
+		Expects that file_name has a .txt extension already
+		"""
+		file = open(file_name, "w")
+
+		g = self.Grades[student]
+		file.write("Student " + str(student) + " (grade " + str(g) + ")" + "\n")
+		file.write("-"*85 + "\n")
+		for t in self.T:
+			for j in self.Cd:
+				if self.XV[student,j] == 1 and self.CourseV[j,t] == 1:
+					room = self.get_room(j,t)
+					teacher = self.get_teacher(j)
+					s1 = "Period " + str(t) + ": " + self.Cd[j]
+					#print "Period " + str(t) + ": " + Cd[j]
+					file.write( s1 + ((50-len(s1))*".") + room + ((20-len(room))*".") + teacher + "\n")
+
+
 	def print_all_student_schedules(self):
 		"""
 		Prints all student schedules
@@ -843,6 +891,16 @@ class Optimizer():
 		for s in self.S:
 			self.print_student_schedule(s)
 			print("\n\n")
+
+	def save_all_student_schedules(self):
+		"""
+		Saves all student schedules as text files
+		"""
+		for s in self.S:
+			f = "student_" + str(s) + "_schedule.txt"
+			if self.save_location is not None:
+				f = self.save_location + "/" + f
+			self.save_student_schedule(s, f)
 
 	def diagnostic(self):
 		"""
@@ -911,10 +969,13 @@ if __name__ == "__main__":
 	O.set_objective()
 
 
-	# O.optimize()
-	# O.assign_value_dicts()
-	# O.print_grid()
-	# O.print_all_student_schedules()
-	# O.diagnostic()
+	O.optimize()
+	O.assign_value_dicts()
+	O.print_grid()
+	O.print_all_student_schedules()
+	O.diagnostic()
+
+	# O.save_grid("test_grid.txt")
+	# O.save_all_student_schedules()
 
 

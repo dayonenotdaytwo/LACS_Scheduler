@@ -26,8 +26,28 @@ class SavedConfig():
 	Fully describe what you will be saving
 	"""
 
-	def __init__(self, initial_file_df, courses, requirements, preference_input,
-					LP_input, teacher_file):
+	# def __init__(self, initial_file_df, courses, requirements, preference_input,
+	# 				LP_input, teacher_file):
+	# def __init__(self, initial_file,
+	# 					teacher_file,
+	# 					preference_file,
+	# 					completed_preference_file,
+	# 					initial_file_df,
+	# 					courses,
+	# 					course_list_selected,
+	# 					preference_input,
+	# 					LP_input,
+	# 					requirements):
+
+	def __init__(self,
+				initial_file_df,
+				courses,
+				course_list_selected,
+				LP_input,
+				teacher_df,
+				preference_input_df,
+				prox,
+				requirements):
 		"""
 		Saves the required filed
 
@@ -47,15 +67,39 @@ class SavedConfig():
 		**These are all the same as we have in the MainApplication fileds**
 		"""
 
+		# The old version
+		# self.initial_file_df = initial_file_df
+		# self.courses = courses
+		# self.requirements = requirements
+		# self.requirements = [] # list of MiniRequirements
+		# for r in requirements:
+		# 	self.requirements.append(MiniRequirement(r))
+		# self.preference_input = preference_input
+		# self.LP_input = LP_input
+		# self.teacher_file = teacher_file
+
+
+		# self.initial_file = initial_file
+		# self.teacher_file = teacher_file
+		# self.preference_file = preference_file
+		# self.completed_preference_file = completed_preference_file
+		# self.initial_file_df = initial_file_df
+		# self.courses = courses
+		# self.course_list_selected = course_list_selected
+		# self.preference_input = preference_input
+		# self.LP_input = LP_input
+
 		self.initial_file_df = initial_file_df
 		self.courses = courses
-		self.requirements = requirements
-		self.requirements = [] # list of MiniRequirements
+		self.course_list_selected = course_list_selected
+		self.LP_input = LP_input
+		self.teacher_df = teacher_df
+		self.preference_input_df = preference_input_df
+		self.prox = prox
+
 		for r in requirements:
 			self.requirements.append(MiniRequirement(r))
-		self.preference_input = preference_input
-		self.LP_input = LP_input
-		self.teacher_file = teacher_file
+
 
 
 

@@ -83,27 +83,52 @@ class MenuBar():
 		with open(file_name, "rb") as input:
 			s = pickle.load(input)
 
-		# Save all the fields to that parent
+		
+		
+		# self.parent.initial_file = s.initial_file
+		# self.parent.teacher_file = s.teacher_file
+		# self.parent.preference_file = s.preference_file
+		# self.parent.completed_preference_file = s.completed_preference_file
+		# self.parent.initial_file_df = s.initial_file_df
+		# self.parent.courses = s.courses
+		# self.parent.course_list_selected = s.course_list_selected
+		# self.parent.preference_input = s.preference_input
+		# self.parent.LP_input = s.LP_input
+
 		self.parent.initial_file_df = s.initial_file_df
 		self.parent.courses = s.courses
-		self.parent.course_list_selected = True # indicate course list exists
+		self.parent.course_list_selected = s.course_list_selected
+		self.parent.LP_input = s.LP_input
+		self.parent.teacher_df = s.teacher_df
+		self.parent.preference_input_df = s.preference_input_df
+		self.parent.prox = s.prox
+
 		for r in s.requirements:
 			full_req = r.create_full()
 			full_req.create_label(self.parent.req_frame_lower)
 			self.parent.requirements.append(full_req)
 
-		self.parent.preference_input = s.preference_input
-		self.parent.LP_input = s.LP_input
-		self.parent.teacher_file = s.teacher_file
+		# Save all the fields to that parent
+		# self.parent.initial_file_df = s.initial_file_df
+		# self.parent.courses = s.courses
+		# self.parent.course_list_selected = True # indicate course list exists
+		# for r in s.requirements:
+		# 	full_req = r.create_full()
+		# 	full_req.create_label(self.parent.req_frame_lower)
+		# 	self.parent.requirements.append(full_req)
 
-		print("Initial File\n\n", self.parent.initial_file_df)
-		print("Courses\n\n", self.parent.courses)
-		print("Requirements\n\n", self.parent.requirements)
-		print("Preferences\n\n", self.parent.preference_input)
-		print("LP Input\n\n", self.parent.LP_input)
-		print("Teacher File\n\n", self.parent.teacher_file)
+		# self.parent.preference_input = s.preference_input
+		# self.parent.LP_input = s.LP_input
+		# self.parent.teacher_file = s.teacher_file
 
-		print("Open Sucessful")
+		# print("Initial File\n\n", self.parent.initial_file_df)
+		# print("Courses\n\n", self.parent.courses)
+		# print("Requirements\n\n", self.parent.requirements)
+		# print("Preferences\n\n", self.parent.preference_input)
+		# print("LP Input\n\n", self.parent.LP_input)
+		# print("Teacher File\n\n", self.parent.teacher_file)
+
+		# print("Open Sucessful")
 
 
 	def save(self):
@@ -115,10 +140,34 @@ class MenuBar():
 		file_name = asksaveasfilename()
 
 		# Create instance of SavedConfig
-		s = SavedConfig(self.parent.initial_file_df, self.parent.courses,
-			 self.parent.requirements, self.parent.preference_input,
-			 self.parent.LP_input, self.parent.teacher_file)
+		# s = SavedConfig(self.parent.initial_file_df, self.parent.courses,
+		# 	 self.parent.requirements, self.parent.preference_input,
+		# 	 self.parent.LP_input, self.parent.teacher_file)
+		# s = SavedConfig(initial_file = self.parent.initial_file,
+		# 				teacher_file = self.parent.teacher_file,
+		# 				preference_file = self.parent.preference_file,
+		# 				completed_preference_file = self.parent.completed_preference_file,
+		# 				initial_file_df = self.parent.initial_file_df,
+		# 				courses = self.parent.courses,
+		# 				course_list_selected = self.parent.course_list_selected,
+		# 				preference_input = self.parent.preference_input,
+		# 				LP_input = self.parent.LP_input,
+		# 				requirements = self.parent.requirements)
+
+		s = SavedConfig(
+				initial_file_df = self.parent.initial_file_df,
+				courses = self.parent.courses,
+				course_list_selected = self.parent.course_list_selected,
+				LP_input = self.parent.LP_input,
+				teacher_df = self.parent.teacher_df,
+				preference_input_df = self.parent.preference_input_df,
+				prox = self.parent.prox,
+				requirements = self.parent.requirements)
 		s.save(file_name)
+
+
+
+
 
 
 	def help(self):
