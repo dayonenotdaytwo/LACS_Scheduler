@@ -1,0 +1,8 @@
+Student 30 (grade 10.0)
+-------------------------------------------------------------------------------------
+Period 1: Discovering Geometry V2.................Sci B...............
+Period 2: HS PE...................................Gym2................Paul Zarach
+Period 3: African Studies.........................Sci C...............Caitlin Moss
+Period 4: African Studies II......................Sci C...............
+Period 7: MS/HS PE V2.............................Gym.................Paul Zarach
+Period 8: Portfolio Art...........................Art.................Garry Bercow

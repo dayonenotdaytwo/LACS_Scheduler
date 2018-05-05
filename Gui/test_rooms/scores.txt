@@ -1,0 +1,165 @@
+Student 0 gets score 14(badly assigned to ['Algebra A'])
+Student 1 gets score 16
+Student 2 gets score 8(badly assigned to ['Algebra A', 'MS English and Social Studies TBA II'])
+Student 3 gets score 12(badly assigned to ['Advanced Algebra and Trigonometry V2'])
+Student 4 gets score 13(badly assigned to ['Algebra A'])
+Student 5 gets score 15
+Student 6 gets score 4(badly assigned to ['Computer Literacy', 'In-Depth Spanish', 'Inquiry and Tools', 'Inquiry and Tools II'])
+Student 7 gets score 15
+Student 8 gets score 8(badly assigned to ['Governance and Dissent'])
+Student 9 gets score 12(badly assigned to ['American Studies/Global Perspective'])
+Student 10 gets score 11(badly assigned to ['Advanced Algebra and Trigonometry V2', 'Chemistry'])
+Student 11 gets score 11(badly assigned to ['MS Science (Natty Simpson)'])
+Student 12 gets score 11(badly assigned to ['Facing History'])
+Student 13 gets score 5(badly assigned to ['Advanced Algebra and Trigonometry', 'American Studies/Global Perspective', 'American Studies/Global Perspective II', 'Facing History'])
+Student 14 gets score 11(badly assigned to ['Computer Literacy'])
+Student 15 gets score 14
+Student 16 gets score 8(badly assigned to ['Advanced Algebra and Trigonometry', 'Community Service Class', 'Discovering Algebra V3'])
+Student 17 gets score 11(badly assigned to ['Advanced Spanish', 'Fantasy and Folklore'])
+Student 18 gets score 14(badly assigned to ['African Studies II'])
+Student 19 gets score 9
+Student 20 gets score 15
+Student 21 gets score 8(badly assigned to ['Computer Literacy', 'Governance and Dissent', 'In-Depth French'])
+Student 22 gets score 10(badly assigned to ['Evolutionary Biology'])
+Student 23 gets score 6(badly assigned to ['7th-8th Grade Art', 'Animal Bio', 'Computer Science', 'MS English and Social Studies TBA II'])
+Student 24 gets score 15
+Student 25 gets score 12(badly assigned to ['Discovering Algebra V2', 'Facing History'])
+Student 26 gets score 9(badly assigned to ['Advanced Algebra and Trigonometry V2', 'Discovering Algebra V3'])
+Student 27 gets score 11(badly assigned to ['Adaptive PE', 'Chemistry'])
+Student 28 gets score 7(badly assigned to ['American Studies/Global Perspective', 'English Seminar', 'French B'])
+Student 29 gets score 12(badly assigned to ['Facing History'])
+Student 30 gets score 15
+Student 31 gets score 13(badly assigned to ['Discovering Algebra V3'])
+Student 32 gets score 5(badly assigned to ['Advanced Algebra and Trigonometry V2', 'Advanced French', 'Facing History', 'Facing History II'])
+Student 33 gets score 11(badly assigned to ['Advanced Algebra and Trigonometry V2', 'Chemistry'])
+Student 34 gets score 14(badly assigned to ['Facing History'])
+Student 35 gets score 14(badly assigned to ['Algebra B'])
+Student 36 gets score 14(badly assigned to ['Algebra B'])
+Student 37 gets score 11(badly assigned to ['Adaptive PE', 'Algebra B'])
+Student 38 gets score 17
+Student 39 gets score 10(badly assigned to ['African Studies', 'Fantasy and Folklore'])
+Student 40 gets score 9(badly assigned to ['Discovering Algebra V3', 'In-Depth French'])
+Student 41 gets score 12
+Student 42 gets score 16
+Student 43 gets score 14
+Student 44 gets score 11(badly assigned to ['Algebra A'])
+Student 45 gets score 15
+Student 46 gets score 9(badly assigned to ['American Studies/Global Perspective', 'Discovering Algebra V3'])
+Student 47 gets score 12(badly assigned to ['Algebra A'])
+Student 48 gets score 11(badly assigned to ['Adaptive PE', 'African Studies'])
+Student 49 gets score 10(badly assigned to ['Advanced French', 'Computer Science'])
+Student 50 gets score 12(badly assigned to ['US History and Lit: The 20th Century'])
+Student 51 gets score 15
+Student 52 gets score 9(badly assigned to ['Advanced Algebra and Trigonometry', 'Discovering Algebra V3'])
+Student 53 gets score 13(badly assigned to ['The Renaissance'])
+Student 54 gets score 15
+Student 55 gets score 7(badly assigned to ['Algebra B V2', 'English Seminar'])
+Student 56 gets score 8(badly assigned to ['Advanced French', 'Algebra A', 'Economics'])
+Student 57 gets score 10(badly assigned to ['African Studies', 'Algebra A V2'])
+Student 58 gets score 8(badly assigned to ['Advanced Algebra and Trigonometry', 'Chemistry', 'Discovering Algebra V3'])
+Student 59 gets score 13(badly assigned to ['Algebra A'])
+Student 60 gets score 8(badly assigned to ['Computer Science', 'Fantasy and Folklore'])
+Student 61 gets score 11(badly assigned to ['American Studies/Global Perspective'])
+Student 62 gets score 9(badly assigned to ['Advanced French', 'American Studies/Global Perspective'])
+Student 63 gets score 13(badly assigned to ['Discovering Algebra V3'])
+Student 64 gets score 13
+Student 65 gets score 11(badly assigned to ['Algebra A', 'Discovering Algebra V3'])
+Student 66 gets score 13(badly assigned to ['Researchers'])
+Student 67 gets score 13
+Student 68 gets score 7(badly assigned to ['Advanced Algebra and Trigonometry', 'American Studies/Global Perspective', 'Discovering Algebra V3'])
+Student 69 gets score 9(badly assigned to ['Adaptive PE', 'Advanced Algebra and Trigonometry'])
+Student 70 gets score 10(badly assigned to ['8th Grade Science', 'Computer Literacy'])
+Student 71 gets score 13(badly assigned to ['Discovering Algebra V3'])
+Student 72 gets score 14(badly assigned to ['Adaptive PE'])
+Student 73 gets score 15
+Student 74 gets score 14
+Student 75 gets score 8(badly assigned to ['African Studies II', 'Algebra A V2', 'Fantasy and Folklore'])
+Student 76 gets score 8(badly assigned to ['7th-8th Grade Art', 'Advanced Algebra and Trigonometry V2', 'Algebra A'])
+Student 77 gets score 8(badly assigned to ['Advanced Algebra and Trigonometry', 'American Studies/Global Perspective', 'Discovering Algebra V3'])
+Student 78 gets score 15
+Student 79 gets score 15
+Student 80 gets score 11(badly assigned to ['Governance and Dissent', 'MS Science (Natty Simpson)'])
+Student 81 gets score 7(badly assigned to ['African Studies', 'Discovering Algebra', 'Fantasy and Folklore'])
+Student 82 gets score 10(badly assigned to ['African Studies II'])
+Student 83 gets score 12(badly assigned to ['Adaptive PE', 'Advanced Spanish'])
+Student 84 gets score 6(badly assigned to ['Adaptive PE', 'Algebra B', 'In-Depth French'])
+Student 85 gets score 8(badly assigned to ['8th Grade Science', 'Algebra A', 'Fantasy and Folklore'])
+Student 86 gets score 14(badly assigned to ['Advanced French'])
+Student 87 gets score 12(badly assigned to ['Discovering Algebra V3'])
+Student 88 gets score 12(badly assigned to ['Discovering Algebra V3', 'Inquiry and Tools II'])
+Student 89 gets score 14(badly assigned to ['African Studies II'])
+Student 90 gets score 15
+Student 91 gets score 13(badly assigned to ['MS Science (Natty Simpson)'])
+Student 92 gets score 0(badly assigned to ['Advanced Algebra and Trigonometry', 'Advanced French', 'American Studies/Global Perspective', 'American Studies/Global Perspective II', 'Facing History', 'Facing History II'])
+Student 93 gets score 0(badly assigned to ['Algebra A V2', 'Facing History', 'Facing History II', 'HS PE V2', 'People and Literature', 'People and Literature II'])
+Student 94 gets score 0(badly assigned to ['Algebra B V2', 'American Studies/Global Perspective', 'American Studies/Global Perspective II', 'Civil Rights Literature', 'Computer Literacy', 'Intro to Physics and Chemistry'])
+Student 95 gets score 0(badly assigned to ['7th-8th Grade Art', '8th Grade Science', 'Facing History', 'Facing History II', 'HS PE V2', 'In-Depth French'])
+Student 96 gets score 17
+Student 97 gets score 9(badly assigned to ['Asia Studies'])
+Student 98 gets score 17
+Student 99 gets score 15
+Student 100 gets score 14
+Student 101 gets score 16
+Student 102 gets score 10(badly assigned to ['Advanced Spanish', 'Utopia/Dystopia'])
+Student 103 gets score 8(badly assigned to ['Advanced Algebra and Trigonometry V2', 'Discovering Algebra V3'])
+Student 104 gets score 12(badly assigned to ['8th Grade Science'])
+Student 105 gets score 15
+Student 106 gets score 13(badly assigned to ['Facing History II'])
+Student 107 gets score 16
+Student 108 gets score 13
+Student 109 gets score 17
+Student 110 gets score 5(badly assigned to ['8th Grade Science'])
+Student 111 gets score 10(badly assigned to ['Computer Literacy'])
+Student 112 gets score 8
+Student 113 gets score 12(badly assigned to ['Chemistry'])
+Student 114 gets score 15
+Student 115 gets score 12(badly assigned to ['Advanced Algebra and Trigonometry V2', 'Discovering Algebra V3'])
+Student 116 gets score 8(badly assigned to ['Chemistry', 'Discovering Algebra V3'])
+Student 117 gets score 17
+Student 118 gets score 12
+Student 119 gets score 6(badly assigned to ['7th-8th Grade Art', 'Discovering Algebra V3'])
+Student 120 gets score 12
+Student 121 gets score 16
+Student 122 gets score 15
+Student 123 gets score 12(badly assigned to ['Non-Western Writers'])
+Student 124 gets score 13
+Student 125 gets score 12
+Student 126 gets score 17
+Student 127 gets score 14
+Student 128 gets score 8
+Student 129 gets score 15
+Student 130 gets score 16
+Student 131 gets score 12(badly assigned to ['Algebra A'])
+Student 132 gets score 15
+Student 133 gets score 13(badly assigned to ['Evolutionary Biology'])
+Student 134 gets score 8(badly assigned to ['Facing History II'])
+Student 135 gets score 10(badly assigned to ['Asia Studies', 'Inquiry and Tools'])
+Student 136 gets score 15
+Student 137 gets score 17
+Student 138 gets score 13(badly assigned to ['Computer Literacy'])
+Student 139 gets score 153
+Student 140 gets score 14
+Student 141 gets score 8(badly assigned to ['Drawing and Painting', 'People and Literature'])
+Student 142 gets score 6(badly assigned to ['Advanced Algebra and Trigonometry', 'Chemistry', 'People and Literature'])
+Student 143 gets score 155
+Student 144 gets score 155(badly assigned to ['Asia Studies'])
+Student 145 gets score 153(badly assigned to ['Asia Studies', 'Facing History II'])
+Student 146 gets score 158
+Student 147 gets score 155(badly assigned to ['Asia Studies'])
+Student 148 gets score 161
+Student 149 gets score 160(badly assigned to ['Algebra A'])
+Student 150 gets score 155(badly assigned to ['Algebra A', 'Discovering Algebra V3'])
+Student 151 gets score 161(badly assigned to ['Studio Art'])
+Student 152 gets score 161(badly assigned to ['Computer Literacy'])
+Student 153 gets score 166
+Student 154 gets score 162(badly assigned to ['Algebra A'])
+Student 155 gets score 11(badly assigned to ['Chemistry'])
+Student 156 gets score 168(badly assigned to ['Fantasy and Folklore'])
+Student 157 gets score 167(badly assigned to ['Algebra A'])
+Student 158 gets score 169(badly assigned to ['Computer Science'])
+Student 159 gets score 169
+Student 160 gets score 171(badly assigned to ['Intermediate French'])
+Student 161 gets score 170(badly assigned to ['Algebra A V2', 'Asia Studies'])
+Student 162 gets score 173(badly assigned to ['Algebra A'])
+Student 163 gets score 174
+Student 164 gets score 176(badly assigned to ['Chemistry'])

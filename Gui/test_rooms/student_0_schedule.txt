@@ -1,0 +1,8 @@
+Student 0 (grade 10.0)
+-------------------------------------------------------------------------------------
+Period 1: Researchers.............................Steve...............Caitlin Moss
+Period 2: Discovering Algebra.....................U3..................
+Period 3: Community Service Class.................Sci B...............Jon Raimon
+Period 4: Algebra A...............................L4..................Sarah Arnoid
+Period 7: MS/HS PE V2.............................Gym.................Paul Zarach
+Period 8: Portfolio Art...........................Art.................Garry Bercow

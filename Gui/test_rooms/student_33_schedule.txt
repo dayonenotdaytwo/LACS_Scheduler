@@ -1,0 +1,8 @@
+Student 33 (grade 10.0)
+-------------------------------------------------------------------------------------
+Period 1: Other...................................N/A.................Other
+Period 2: HS PE...................................Gym2................Paul Zarach
+Period 3: Advanced Algebra and Trigonometry V2....U1..................Sarah Arnoid
+Period 4: Asia Studies............................Music Room..........Michael Nardy
+Period 7: Chemistry...............................Sci C...............Sarah Brumberg
+Period 8: Portfolio Art...........................Art.................Garry Bercow

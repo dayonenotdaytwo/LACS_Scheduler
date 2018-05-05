@@ -1,0 +1,8 @@
+Student 49 (grade 10.0)
+-------------------------------------------------------------------------------------
+Period 1: Civil Rights Literature.................Sci C...............Lexi Hartley
+Period 2: Advanced French.........................L2..................
+Period 3: Advanced Spanish........................U6..................Nora Schapira
+Period 4: Computer Science........................U6..................Natty Simpson
+Period 7: Global Research.........................L4..................Lexi Hartley
+Period 8: Pre-Calculus............................U3..................Chris Martin

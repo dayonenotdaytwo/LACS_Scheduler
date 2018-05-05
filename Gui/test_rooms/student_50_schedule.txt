@@ -1,0 +1,8 @@
+Student 50 (grade 10.0)
+-------------------------------------------------------------------------------------
+Period 1: Other...................................N/A.................Other
+Period 2: HS PE...................................Gym2................Paul Zarach
+Period 3: Economics...............................L4..................
+Period 4: Asia Studies............................Music Room..........Michael Nardy
+Period 7: Experimenting in Sci....................Library.............Gina Kolb
+Period 8: US History and Lit: The 20th Century....U1..................Michael Nardy

@@ -1,0 +1,8 @@
+Student 60 (grade 10.0)
+-------------------------------------------------------------------------------------
+Period 1: Researchers.............................Steve...............Caitlin Moss
+Period 2: Discovering Algebra.....................U3..................
+Period 3: Probability and Statistics..............Steve...............Chris Martin
+Period 4: Computer Science........................U6..................Natty Simpson
+Period 7: MS/HS PE V2.............................Gym.................Paul Zarach
+Period 8: Fantasy and Folklore....................L4..................Lexi Hartley

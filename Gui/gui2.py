@@ -17,6 +17,7 @@ from Requirement import *
 from Popup import *
 from MenuBar import *
 from Optimizer import *
+from StudentMetadata import *
 
 # Helper functions
 import clean_data
@@ -66,6 +67,11 @@ class MainApplication(tk.Frame):
 		self.hs_preference_df = None
 		self.preference_input_df = None
 		self.prox = None
+
+		# New with data (and Justina's Script)
+		# These are assigned when pref matrix made
+		self.student_dict = None
+		self.need_course_num_dict = None
 
 		self.requirements = []
 
@@ -319,6 +325,8 @@ class MainApplication(tk.Frame):
 		"""
 		Selects the file for the filled out student preferences,
 		then run's the scipt to turn them into useable LP inputs
+
+		NO LONGER USED
 		"""
 		# In the interum, as don't know where that script is
 		# just use the flattened for testing
@@ -351,6 +359,12 @@ class MainApplication(tk.Frame):
 
 		if self.hs_preference_df is not None:
 			self.combine_prefs()
+			# From the new data addition
+			self.student_dict = metadata(self.hs_preference_df,
+									 self.ms_preference_df)
+			self.need_course_num_dict = num_courses(self.LP_input,
+													self.hs_preference_df,
+													self.ms_preference_df)
 
 
 	def get_hs_preference_file(self):
@@ -367,6 +381,12 @@ class MainApplication(tk.Frame):
 
 		if self.ms_preference_df is not None:
 			self.combine_prefs()
+			# from the new data addition
+			self.student_dict = metadata(self.hs_preference_df,
+									 self.ms_preference_df)
+			self.need_course_num_dict = num_courses(self.LP_input,
+													self.hs_preference_df,
+													self.ms_preference_df)
 
 
 	def combine_prefs(self):
@@ -426,6 +446,9 @@ class MainApplication(tk.Frame):
 		    
 		self.preference_input_df = result
 		print(self.preference_input_df)
+
+
+
 
 
 
@@ -615,12 +638,13 @@ class MainApplication(tk.Frame):
 		#self.LP_input = self.LP_input.reindex(range(self.LP_input.shape[0]))
 
 		O = Optimizer(prefs = self.preference_input_df,
-					LP_input = self.LP_input, 
-					grades = grades,
+					LP_input = self.LP_input,
 					teacher = self.teacher_df,
 					GAP = GAP,
 					requirements = self.requirements,
 					prox = self.prox,
+					student_dict = self.student_dict,
+					num_courses = self.need_course_num_dict,
 					save_location  = self.optimization_output_directory)
 
 		print("Adding Constraints")

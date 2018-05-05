@@ -16,8 +16,10 @@ import pandas as pd
 from os import system
 import pickle 
 import timeit # just to check setuptime
+import datetime
 
 from Requirement import *
+from StudentMetadata import *
 
 class Optimizer():
 	"""
@@ -76,8 +78,11 @@ class Optimizer():
 
 	"""
 
-	def __init__(self, prefs, LP_input, grades, teacher, GAP, requirements=[],
-			prox=None, save_location=None):
+	def __init__(self, prefs, LP_input, teacher, GAP, 
+				student_dict, num_courses,
+				save_location=None,
+				requirements = [],
+				prox=None, ):
 		"""
 		Sets up main fields, and calls other methods to parse data into required
 		sets
@@ -119,7 +124,7 @@ class Optimizer():
 		self.I = None
 		self.Db = None
 		self.c_mini = None
-		self.Grades = None
+		#self.Grades = None
 		self.P = None
 		self.MIN = None
 		self.MAX = None
@@ -131,6 +136,9 @@ class Optimizer():
 		self.room_constrained_subjects = None
 		self.constrained_rooms = None
 		self.constrained_courses = None
+
+		self.student_dict = student_dict
+		self.num_courses = num_courses
 
 		self.XV = {}
 		self.CourseV = {}
@@ -153,7 +161,7 @@ class Optimizer():
 
 		# Place holders untill full data is made
 		self.prox = prox
-		self.grades = grades
+		#self.grades = grades
 		#self.prox = pd.read_csv("../Resources/Proximity.csv")
 		#self.grades = pd.read_csv("../Resources/grades.csv", header=None)
 
@@ -173,7 +181,7 @@ class Optimizer():
 		self.m = Model()
 
 		# Quick shortening to see if it works?
-		self.S = self.S[:50]
+		# self.S = self.S[:2]
 
 		# Add Variables
 		print("Adding Variables")
@@ -241,7 +249,7 @@ class Optimizer():
 		self.I = list(set(self.teacher["Teacher Name"]))
 
 		# Grades for each student
-		self.Grades = self.grades['1']
+		#self.Grades = self.grades['1']
 
 		# Extract Preferences
 		#self.P = self.prefs.drop("Student", axis=1).as_matrix()
@@ -619,7 +627,9 @@ class Optimizer():
 
 			# Add constraint
 			for i in self.S:
-				if self.Grades[i] == req.grade:
+				#if self.Grades[i] == req.grade:
+				# New way of pulling grade out of dictinary
+				if self.student_dict[i].grade == req.grade:
 					self.m.addCons(quicksum(self.X[i,j] for j in multi) == 1)
 
 
@@ -696,7 +706,7 @@ class Optimizer():
 			self.m.setRealParam('limits/gap', self.GAP)
 		else:
 			self.m.setRealParam('limits/gap', .33)
-		print("GAP set")
+		print("GAP set at", self.GAP)
 
 		self.m.setObjective(-1*quicksum(self.X[i,j] for i in self.S 
 			for j in self.other_indicies) + 
@@ -709,6 +719,8 @@ class Optimizer():
 		Runs the optimization sequence
 		"""
 		print("-"*30 + " Optimization Starting " + "-"*30)
+		start_time = datetime.datetime.now()
+		print("Optimization start time:", start_time)
 		self.m.optimize()
 
 	def assign_value_dicts(self):
@@ -817,6 +829,26 @@ class Optimizer():
 								+ str(num_enrolled) + "."*(40 - len(str(num_enrolled))) + self.get_teacher(j))
 			print("\n")
 
+	def print_grid_no_room(self):
+		"""
+		prints the gride version of schedule
+		this version of the function is to be called if the 
+		model is run without the room constrains
+		"""
+		print("\n\n")
+		for t in self.T:
+			print("-"*20 + " " + "PERIOD " + str(t) + " " + "-"*70)
+			print("Course" + 34*" " + "Enrollment" + " "*(40 - len("Enrollment")) + "Teacher")
+			print("-"*100)
+			# for j in range(len(C)):
+			for j in self.c_mini:
+				# if the course is offered
+				if self.CourseV[j,t] == 1:
+					num_enrolled = self.get_enrollment(j)
+					print(self.Cd[j] + (40 - len(self.Cd[j]))*"." \
+						+ str(num_enrolled) + "."*(40 - len(str(num_enrolled))) + self.get_teacher(j))
+			print("\n")
+
 	def save_grid(self, file_name):
 		"""
 		Takes in a file name, and saves the grid to a text file at that location
@@ -844,13 +876,41 @@ class Optimizer():
 			file.write("\n")
 
 
+	def save_grid_no_rooms(self, file_name):
+		"""
+		Takes in a file name, and saves the grid to a text file at that location
+		Largely, mirrors the print_grid function, just with saves
+
+		Expected that file has .txt extension already
+		"""
+		if self.save_location is not None:
+			file_name = self.save_location + "/" + file_name
+		file = open(file_name, "w")
+		for t in self.T:
+			file.write("-"*20 + " " + "PERIOD " + str(t) + " " + "-"*70 + "\n")
+			file.write("Course" + 34*" " + "Enrollment" + " "*(40 - len("Enrollment")) + "Teacher" + "\n")
+			file.write("-"*100 + "\n")
+			# for j in range(len(C)):
+			for j in self.c_mini:
+				# if the course is offered
+				if self.CourseV[j,t] == 1:
+						num_enrolled = self.get_enrollment(j)
+						file.write(self.Cd[j] + (40 - len(self.Cd[j]))*"." \
+							+ str(num_enrolled) + "."*(40 - len(str(num_enrolled))) + self.get_teacher(j) + "\n")
+			file.write("\n")
+
+
+
 	def print_student_schedule(self, student):
 		"""
 		takes in the index of a student and prints out their schedule
 		"""
 		# Get students grade
-		g = self.Grades[student]
-		print("Student " + str(student) + " (grade " + str(g) + ")")
+		#g = self.Grades[student]
+		g = self.student_dict[student].grade
+		last_name = self.student_dict[student].last_name
+		first_name = self.student_dict[student].first_name
+		print(first_name + " " + last_name + " (grade " + str(g) + ")")
 		print("-"*85)
 		for t in self.T:
 			for j in self.Cd:
@@ -862,6 +922,21 @@ class Optimizer():
 					print( s1 + ((50-len(s1))*".") + room + ((20-len(room))*".") + teacher)
 
 
+	def print_student_schedule_no_room(self,student):
+		g = self.student_dict[student].grade
+		last_name = self.student_dict[student].last_name
+		first_name = self.student_dict[student].first_name
+		print(first_name + " " + last_name + " (grade " + str(g) + ")")
+		print("-"*65)
+		for t in self.T:
+			for j in self.Cd:
+				if self.XV[student,j] == 1 and self.CourseV[j,t] == 1:
+					teacher = self.get_teacher(j)
+					s1 = "Period " + str(t) + ": " + self.Cd[j]
+					#print "Period " + str(t) + ": " + Cd[j]
+					print( s1 + ((50-len(s1))*".")  + teacher)
+
+
 	def save_student_schedule(self, student, file_name):
 		"""
 		Takes in an index of a student, as well as the name of .txt file, 
@@ -871,8 +946,11 @@ class Optimizer():
 		"""
 		file = open(file_name, "w")
 
-		g = self.Grades[student]
-		file.write("Student " + str(student) + " (grade " + str(g) + ")" + "\n")
+		#g = self.Grades[student]
+		g = self.student_dict[student].grade
+		last_name = self.student_dict[student].last_name
+		first_name = self.student_dict[student].first_name
+		file.write(first_name + " " + last_name + " (grade " + str(g) + ")" + "\n")
 		file.write("-"*85 + "\n")
 		for t in self.T:
 			for j in self.Cd:
@@ -883,24 +961,59 @@ class Optimizer():
 					#print "Period " + str(t) + ": " + Cd[j]
 					file.write( s1 + ((50-len(s1))*".") + room + ((20-len(room))*".") + teacher + "\n")
 
+	def save_student_schedule_no_rooms(self, student, file_name):
+		"""
+		Takes in an index of a student, as well as the name of .txt file, 
+		and saves the student's schedule to the new text file
 
-	def print_all_student_schedules(self):
+		Expects that file_name has a .txt extension already
+		"""
+		file = open(file_name, "w")
+
+		#g = self.Grades[student]
+		g = self.student_dict[student].grade
+		last_name = self.student_dict[student].last_name
+		first_name = self.student_dict[student].first_name
+		file.write(first_name + " " + last_name + " (grade " + str(g) + ")" + "\n")
+		file.write("-"*65 + "\n")
+		for t in self.T:
+			for j in self.Cd:
+				if self.XV[student,j] == 1 and self.CourseV[j,t] == 1:
+					teacher = self.get_teacher(j)
+					s1 = "Period " + str(t) + ": " + self.Cd[j]
+					#print "Period " + str(t) + ": " + Cd[j]
+					file.write( s1 + ((50-len(s1))*".") + teacher + "\n")
+
+
+	def print_all_student_schedules(self, rooms=True):
 		"""
 		Prints all student schedules
+
+		rooms - Boolean, indicates if the model was run with or without rooms
 		"""
 		for s in self.S:
-			self.print_student_schedule(s)
+			if not np.isnan(self.student_dict[s].grade):
+				if rooms:
+					self.print_student_schedule(s)
+				else:
+					self.print_student_schedule_no_room(s)
 			print("\n\n")
 
-	def save_all_student_schedules(self):
+	def save_all_student_schedules(self, rooms = True):
 		"""
 		Saves all student schedules as text files
 		"""
 		for s in self.S:
-			f = "student_" + str(s) + "_schedule.txt"
-			if self.save_location is not None:
-				f = self.save_location + "/" + f
-			self.save_student_schedule(s, f)
+			if not np.isnan(self.student_dict[s].grade):
+				last_name = self.student_dict[s].last_name
+				first_name = self.student_dict[s].first_name
+				f = last_name + "_" + first_name + "_schedule.txt"
+				if self.save_location is not None:
+					f = self.save_location + "/" +f
+				if rooms:
+					self.save_student_schedule(s, f)
+				else:
+					self.save_student_schedule_no_rooms(s, f)
 
 	def diagnostic(self):
 		"""
@@ -908,6 +1021,8 @@ class Optimizer():
 		were assigned to any course the did not want
 		"""
 		for i in self.S:
+			name = (self.student_dict[i].first_name + 
+						self.student_dict[i].last_name)
 			pref_score = 0
 			bad_assignments = []
 			for j in self.C:
@@ -938,44 +1053,81 @@ if __name__ == "__main__":
 	# prox =pd.read_csv("OptTestFiles/prox2.csv")
 
 
-	LP_input = pd.read_csv("test_LP_input.csv")
+	#LP_input = pd.read_csv("test_LP_input.csv")
+	LP_input = pd.read_csv("~/Desktop/test_pref/LP_input.csv")
 	teacher = pd.read_csv("test_teacher_Df.csv")
-	prefs = pd.read_csv("test_pref_input_df.csv")
+	#prefs = pd.read_csv("test_pref_input_df.csv")
+	prefs = pd.read_csv("~/Desktop/test_pref/processed_preference_data.csv")
 	#grades = pd.read_csv("OptTestFiles/grades.csv")
-	grades = pd.DataFrame({'0':[1,2], '1':[8,9]})
+	grades = pd.DataFrame({'0':range(1,prefs.shape[0] +1), '1':10*np.ones(prefs.shape[0])})
 	prox =pd.read_csv("test_prox.csv")
+
+	# Get student dictionary
+	hs_prefs = pd.read_csv("~/Desktop/test_pref/High School Form2.csv")
+	ms_prefs = pd.read_csv("~/Desktop/test_pref/Middle School form2.csv")
+	student_dict = metadata(hs_prefs, ms_prefs)
+
+	# Get number of courses dictionary
+	num_courses = get_num_courses(LP_input, hs_prefs, ms_prefs)
+	# I think there are issues with this
+	# 1) I see Nan?
+	# 2) I see a lot of 0's, i am thinking if 0 do not put constraint?
+	# For now I am not bothering with this at all
+
+
+	# print("Exiting Script")
+	# raise SystemExit
 
 	O = Optimizer(prefs = prefs,
 					LP_input = LP_input,
-					grades = grades,
 					teacher = teacher,
-					GAP = 0,
+					GAP = .33,
+					student_dict = student_dict,
+					num_courses = num_courses,
 					requirements = [],
 					prox = prox,
-					save_location = None)
+					save_location = "test_rooms")
 	# Add constraints
 	print("Adding Constraints")
 	O.add_basic_constraints()
 	O.add_max_constraint()
 	#self.add_min_constraint()
-	O.add_proximity_constraints()
+	#O.add_proximity_constraints()
 	O.add_teacher_constraints()
 	O.add_course_constraints()
-	#self.add_grade_level_requirements()
-	O.add_room_constraints()
+	#O.add_grade_level_requirements()
+	#O.add_room_constraints()
 	O.add_period_constraints()
 	print("Constraints Added")
 
 	O.set_objective()
 
 
-	O.optimize()
-	O.assign_value_dicts()
+	#O.optimize()
+
+	try:
+		at = O.save_location + "/optimizer_save"
+		with open(at, 'wb') as output:
+			pickle.dump(self, output, pickle.HIGHEST_PROTOCOL)
+		
+		print("Saved solution (as Optimizer instance) to", at)
+	except:
+		print("save failed")
+		pass
+
+	# load the solution with rooms
+	at = "test_rooms/"
+	O.XV = pickle.load(open(at+"xv.pkl", 'rb'))
+	O.CourseV = pickle.load(open(at+"coursev.pkl", 'rb'))
+	O.RoomV = pickle.load(open(at+"roomv.pkl", 'rb'))
+
+	#O.assign_value_dicts()
 	O.print_grid()
-	O.print_all_student_schedules()
+	#O.print_grid_no_room()
+	O.print_all_student_schedules(rooms = True)
 	O.diagnostic()
 
-	# O.save_grid("test_grid.txt")
-	# O.save_all_student_schedules()
+	#O.save_grid_no_rooms("test_grid_no_rooms.txt")
+	#O.save_all_student_schedules(rooms=False)
 
 
