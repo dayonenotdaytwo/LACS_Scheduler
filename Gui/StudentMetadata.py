@@ -20,9 +20,27 @@ class Student:
         else:
             self.last_name = ""
         if s_id is not None:
+            if type(s_id) == int or type(s_id) == float:
+                pass
+            elif s_id.isnumeric():
+                s_id = int(s_id)
+            elif list(s_id.strip()) != []:
+                #print("at start", s_id)
+                l = list(s_id.strip()) # split it
+                l2 = [x for x in l if x.isnumeric()] # keep only numbers
+                #print("before problem", l2)
+                if l2 != []:
+                    # was all words
+                    s_id = ''.join(map(str, l2)) # combine to string
+                    s_id = int(s_id) # turn back to number
+                else:
+                    s_id = 0
+            else:
+                s_id = 0
+
             self.s_id = s_id 
         else:
-            self.s_id = ""
+            self.s_id = 0
         if grade is not None:
             self.grade = grade 
         else:
@@ -41,19 +59,16 @@ class Student:
 
         return s
 
-def metadata(hs_response, ms_response):
+def metadata(HSF, MSF):
     '''
     returns a dictionary of Student objects
     Student keys correspond to str(row) from the processed preferences data
-
-    Parameters
-    ----------
-    hs_response - pandas dataframe corresponding to the high school
-                     response form
-
-    ms_response - pandas datafrome corresponding to the middle school
-                        response form
     '''
+
+    # load data
+    hs_response = pd.read_csv(HSF)
+    ms_response = pd.read_csv(MSF)
+    
     # get metadata cols
     hs_data = hs_response.iloc[:, :6]
     ms_data = ms_response.iloc[:, :6]
@@ -62,30 +77,23 @@ def metadata(hs_response, ms_response):
     students = {}
 
     for i, row in hs_data.iterrows():
-        students[i] = Student(row[1], row[2], row[3], row[4], row[5])
+        students[str(i)] = Student(row[1], row[2], row[3], row[4], row[5])
 
     ms_start_index = hs_data.shape[0]
     for i, row in ms_data.iterrows():
-        students[i + ms_start_index] = Student(row[1], row[2], row[3], row[4], row[5])
+        students[str(i + ms_start_index)] = Student(row[1], row[2], row[3], row[4], row[5])
         
     return students
 
-    #students = metadata("LP_Input.csv", "HSF_5_4.csv", "MSF_5_4.csv")
+students = metadata("HSF_5_4.csv", "MSF_5_4.csv")
 
-def get_num_courses(LP_Input, hs_response, ms_response):
-    ''' 
-    returns a dictionary with num classes by dept for each student 
-
-    Parameters
-    ----------
-    hs_response - pandas dataframe corresponding to the high school
-                     response form
-
-    ms_response - pandas datafrome corresponding to the middle school
-                        response form
-
-    LP_Input - the standard LP input dataframe
-    '''
+def num_courses(LP_Input, HSF, MSF):
+    ''' returns a dictionary with num classes by dept for each student '''
+    
+    # load data
+    hs_response = pd.read_csv(HSF)
+    ms_response = pd.read_csv(MSF)
+    LP_Input =  pd.read_csv(LP_Input)
     
     # get list of depts
     hs_depts= set(LP_Input["HS Category"])
@@ -140,7 +148,43 @@ def get_num_courses(LP_Input, hs_response, ms_response):
     
     return num_courses_dict
 
-    # num_courses("LP_Input.csv", "HSF_5_4.csv", "MSF_5_4.csv")
+num_courses("LP_Input.csv", "HSF_5_4.csv", "MSF_5_4.csv")
 
+def sim6(num_6th, HSF, MSF, processed_pref_data):
+    # 
+    '''
+    returns a dictionary of Student objects, like metadata() but also
+    simulates 6th graders with a first choice pref over all courses that they could take
 
+    Also creates a new file with processed pref data including 6th graders
+    called "processed_preference_data_with6.csv"
 
+    '''
+    choices =  ['Inquiry and Tools', 'People and Literature', 
+                '6th Grade Art', 'Computer Literacy', 'MS Science (Debbie Cowell)',
+                'MS Science (Natty Simpson)', 'Roots Music', 'Street Band', 
+                'Fiber Tech','MS PE', 'MS/HS PE', 'Spanish A', "Spanish B"]
+
+    pref_data = pd.read_csv(processed_pref_data, index_col = 0)
+    start_idx_6th = len(pref_data)
+    course_list = pref_data.columns
+
+    ix = np.isin(list(course_list), choices)
+    prefs = ix.astype(int)
+
+    sixth_graders = np.tile(prefs, num_6th).reshape((num_6th,len(course_list))) # sim 6th graders as np array
+    sixth_graders_df = pd.DataFrame(sixth_graders , columns=course_list) # sim 6th graders as df
+
+    pref_data = pref_data.append(sixth_graders_df, ignore_index = True)
+    pref_data.to_csv("processed_preference_data_with6.csv")
+    
+    # add 6th graders to student dictionary
+    students = metadata(HSF, MSF)
+
+    for s in np.arange(start_idx_6th, start_idx_6th + num_6th): 
+        # email, first_name, last_name, s_id, grade
+        students[str(s)] = Student('DummyEmail'+str(s), 'DummyFName'+str(s), 'DummyLName'+str(s), 'DummyID'+str(s), '6')
+    
+    return students
+
+sim6_students = sim6(40, "HSF_5_4.csv", "MSF_5_4.csv", "processed_preference_data.csv")
