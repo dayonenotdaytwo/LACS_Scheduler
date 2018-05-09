@@ -66,9 +66,11 @@ def metadata(HSF, MSF):
     '''
 
     # load data
-    hs_response = pd.read_csv(HSF)
-    ms_response = pd.read_csv(MSF)
-    
+    #hs_response = pd.read_csv(HSF)
+    #ms_response = pd.read_csv(MSF)
+    hs_response = HSF
+    ms_response = MSF
+
     # get metadata cols
     hs_data = hs_response.iloc[:, :6]
     ms_data = ms_response.iloc[:, :6]
@@ -77,23 +79,26 @@ def metadata(HSF, MSF):
     students = {}
 
     for i, row in hs_data.iterrows():
-        students[str(i)] = Student(row[1], row[2], row[3], row[4], row[5])
+        students[i] = Student(row[1], row[2], row[3], row[4], row[5])
 
     ms_start_index = hs_data.shape[0]
     for i, row in ms_data.iterrows():
-        students[str(i + ms_start_index)] = Student(row[1], row[2], row[3], row[4], row[5])
+        students[i + ms_start_index] = Student(row[1], row[2], row[3], row[4], row[5])
         
     return students
 
-students = metadata("HSF_5_4.csv", "MSF_5_4.csv")
+#students = metadata("HSF_5_4.csv", "MSF_5_4.csv")
 
-def num_courses(LP_Input, HSF, MSF):
+def get_num_courses(LP_Input, HSF, MSF):
     ''' returns a dictionary with num classes by dept for each student '''
     
     # load data
-    hs_response = pd.read_csv(HSF)
-    ms_response = pd.read_csv(MSF)
-    LP_Input =  pd.read_csv(LP_Input)
+    #hs_response = pd.read_csv(HSF)
+    #ms_response = pd.read_csv(MSF)
+    #LP_Input =  pd.read_csv(LP_Input)
+    hs_response = HSF
+    ms_response = MSF
+    LP_Input = LP_Input
     
     # get list of depts
     hs_depts= set(LP_Input["HS Category"])
@@ -148,7 +153,7 @@ def num_courses(LP_Input, HSF, MSF):
     
     return num_courses_dict
 
-num_courses("LP_Input.csv", "HSF_5_4.csv", "MSF_5_4.csv")
+#num_courses("LP_Input.csv", "HSF_5_4.csv", "MSF_5_4.csv")
 
 def sim6(num_6th, HSF, MSF, processed_pref_data):
     # 
@@ -165,7 +170,8 @@ def sim6(num_6th, HSF, MSF, processed_pref_data):
                 'MS Science (Natty Simpson)', 'Roots Music', 'Street Band', 
                 'Fiber Tech','MS PE', 'MS/HS PE', 'Spanish A', "Spanish B"]
 
-    pref_data = pd.read_csv(processed_pref_data, index_col = 0)
+    #pref_data = pd.read_csv(processed_pref_data, index_col = 0)
+    pref_data = processed_pref_data
     start_idx_6th = len(pref_data)
     course_list = pref_data.columns
 
@@ -176,15 +182,15 @@ def sim6(num_6th, HSF, MSF, processed_pref_data):
     sixth_graders_df = pd.DataFrame(sixth_graders , columns=course_list) # sim 6th graders as df
 
     pref_data = pref_data.append(sixth_graders_df, ignore_index = True)
-    pref_data.to_csv("processed_preference_data_with6.csv")
+    #pref_data.to_csv("processed_preference_data_with6.csv")
     
     # add 6th graders to student dictionary
     students = metadata(HSF, MSF)
 
     for s in np.arange(start_idx_6th, start_idx_6th + num_6th): 
         # email, first_name, last_name, s_id, grade
-        students[str(s)] = Student('DummyEmail'+str(s), 'DummyFName'+str(s), 'DummyLName'+str(s), 'DummyID'+str(s), '6')
+        students[s] = Student('DummyEmail'+str(s), 'DummyFName'+str(s), 'DummyLName'+str(s), 'DummyID'+str(s), '6')
     
-    return students
+    return students, pref_data
 
-sim6_students = sim6(40, "HSF_5_4.csv", "MSF_5_4.csv", "processed_preference_data.csv")
+#sim6_students = sim6(40, "HSF_5_4.csv", "MSF_5_4.csv", "processed_preference_data.csv")

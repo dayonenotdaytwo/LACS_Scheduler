@@ -80,6 +80,7 @@ class Optimizer():
 
 	def __init__(self, prefs, LP_input, teacher, GAP, 
 				student_dict, num_courses,
+				rr_df = None,
 				save_location=None,
 				requirements = [],
 				prox=None, ):
@@ -136,6 +137,8 @@ class Optimizer():
 		self.room_constrained_subjects = None
 		self.constrained_rooms = None
 		self.constrained_courses = None
+		self.RR_course_indicies = None # for the courses
+		self.RR_student_dict = None # dictionary mapping RR to list of student indicies
 
 		self.student_dict = student_dict
 		self.num_courses = num_courses
@@ -154,6 +157,7 @@ class Optimizer():
 		self.teacher = teacher
 		self.GAP = GAP
 		self.requirements = requirements
+		self.rr_df = rr_df # The dataframe with columns for rr's with student id's
 		self.save_location = save_location
 
 		# Clean up preferences (at least in current form)
@@ -181,7 +185,7 @@ class Optimizer():
 		self.m = Model()
 
 		# Quick shortening to see if it works?
-		# self.S = self.S[:2]
+		#self.S = self.S[3:13]
 
 		# Add Variables
 		print("Adding Variables")
@@ -235,6 +239,12 @@ class Optimizer():
 		for i in range(self.df.shape[0]): 
 			self.Cd[i] = self.df["Course Name"].iloc[i]
 
+		# # TEMP ADDITION
+		# i = len(self.Cd)
+		# self.Cd[i+1] = "RR1"
+		# self.Cd[i+2] = "RR2"
+		# self.Cd[i+3] = "RR3"
+
 		self.C = range(len(self.Cd))
 
 		# Gather "Other Indicies"
@@ -253,7 +263,11 @@ class Optimizer():
 
 		# Extract Preferences
 		#self.P = self.prefs.drop("Student", axis=1).as_matrix()
-		self.P = self.prefs.as_matrix()
+		self.P = self.prefs.drop("Student", axis=1).as_matrix()
+		self.P[self.P==1] = 4
+		self.P[self.P==3] = 1
+		self.P[self.P==4] = 3
+		#self.P = self.prefs.as_matrix()
 
 		# Double periods
 		self.Db = self.df["Double Period"].fillna(0).astype(int)
@@ -281,6 +295,37 @@ class Optimizer():
 		Subjects = list(self.prox.columns)[1:]
 		for subj in list(self.prox.columns)[1:]:
 			self.prox_dict[subj] = self.prox[subj]
+
+		# Get course indicies for the RR's
+		# self.RR_course_indicies = []
+		self.RR_course_indicies = {}
+		for name in ["RR1", "RR2", "RR3"]:
+			# self.RR_course_indicies.append(list(self.Cd.values()).index(name))
+			self.RR_course_indicies[name] = list(self.Cd.values()).index(name)
+
+		# Make the RR_dict from the rr_df
+		self.RR_student_dict = {}
+		for name in ["RR1", "RR2", "RR3"]:
+			l = list(self.rr_df[name])
+			#print(l)
+			l2 = []
+			ind_list = []
+			for v in l:
+				if not np.isnan(v):
+					l2.append(v)
+			#print(v)
+
+			for i in l2:
+				#where i is a student ID
+				for s in self.S:
+					if not np.isnan(self.student_dict[s].s_id):
+						if int(self.student_dict[s].s_id) == int(i):
+							ind_list.append(s)
+					else:
+						pass
+
+			self.RR_student_dict[name] = ind_list
+
 
 
 	def get_multi_instance_course_list(self):
@@ -335,7 +380,8 @@ class Optimizer():
 			for index in range(self.teacher.shape[0]):
 				if self.teacher.iloc[index]["Teacher Name"] == i:
 					l = I_C_dict[i]
-					l.append(self.teacher.iloc[index][1])
+					#l.append(self.teacher.iloc[index][1])
+					l.append(self.teacher.iloc[index]["Course Name"])
 					I_C_dict[i] = l
 
 
@@ -368,13 +414,15 @@ class Optimizer():
 		"""
 		# Set of rooms
 		R = ["U1", "Steve", "U2", "U3", "U4/5", "U6", "U7", "L2", "L3", "Library", "Art", "L4", 
-				"L6", "Sci A", "Sci B", "Sci C", "Music Room", "Gym", "Gym2"]
+				"L6", "Sci A", "Sci B", "Sci C", "Music Room", "Gym", "Gym2",
+				"RR1", "RR2", "RR3"]
 
 		# Department Courses
 		Science_Rooms = ["Sci A", "Sci B", "Sci C"]
 		Art_Rooms = ["Art"]
 		Gym_Rooms = ["Gym", "Gym2"]
 		Music_Rooms = ["Music Room"]
+		Resource_Rooms = ["RR1", "RR2", "RR3"]
 		Free_Rooms = list( set(R) - set(Science_Rooms + Art_Rooms + Gym_Rooms +
 			Music_Rooms))
 
@@ -385,11 +433,11 @@ class Optimizer():
 		Music_Courses = self.df.index[self.df['Room Type'] == "Music"].tolist()
 		Resource_Courses = self.df.index[self.df['Room Type'] == "Resource"].tolist()
 
-		room_constrained_subjects = ["Science", "Art", "Music", "Gym"]
+		room_constrained_subjects = ["Science", "Art", "Music", "Gym", "Resource"]
 		constrained_rooms = {"Science":Science_Rooms, "Art":Art_Rooms, 
-			"Music":Music_Rooms, "Gym":Gym_Rooms}
+			"Music":Music_Rooms, "Gym":Gym_Rooms, "Resource":Resource_Rooms}
 		constrained_courses = {"Science":Science_Courses, "Art":Art_Courses,
-			"Music":Music_Courses, "Gym":Gym_Courses}
+			"Music":Music_Courses, "Gym":Gym_Courses, "Resource":Resource_Courses}
 
 		# set fields
 		self.R = R
@@ -440,6 +488,8 @@ class Optimizer():
 			if "Other" not in self.Cd[j] and "Empty" not in self.Cd[j]:
 				for s in self.R:
 					for t in self.T:
+						if j==30 and t==1 and s=="Art":
+							print("We added the var")
 						name = "Course " + str(j) + " in room " + str(s) + \
 								" durring period " + str(t)
 						# Rv[j,s,t] = m.addVar(vtype=GRB.BINARY, name=name)
@@ -504,24 +554,52 @@ class Optimizer():
 		"""
 
 		# Setup proximity min and max dicts (temp untill we generate more granular data)
-		min_sub_dict = {}
-		max_sub_dict = {}
-		for subject in self.prox_dict.keys():
-			min_sub_dict[subject] = np.ones(len(self.S))*0
-			max_sub_dict[subject] = np.ones(len(self.S))*3 
+		# min_sub_dict = {}
+		# max_sub_dict = {}
+		# for subject in self.prox_dict.keys():
+		# 	min_sub_dict[subject] = np.ones(len(self.S))*0
+		# 	max_sub_dict[subject] = np.ones(len(self.S))*3 
 
-		for subject in self.prox_dict.keys():
-			if subject != "Other":
+		# for subject in self.prox_dict.keys():
+		# 	if subject != "Other":
+		# 		for i in self.S:
+		# 			# Only add the minimum constraint if meaningful
+		# 			if min_sub_dict[subject][i] > 0:
+		# 				self.m.addCons(quicksum(self.prox_dict[subject][j]*self.X[i,j]
+		# 				 for j in range(len(self.C))) >= min_sub_dict[subject][i])
+
+		# 			# Always add the max constraint
+		# 			self.m.addCons(quicksum(self.prox_dict[subject][j]*self.X[i,j]
+		# 						 for j in self.C) <= max_sub_dict[subject][i])
+
+		for subject in self.num_courses.keys():
+			#if (subject not in  ["Other", "J"] and (subject in self.num_courses.keys()) ):
+			if subject in self.num_courses.keys():
+				print("\t\t", subject)
+				#d = self.num_courses[subject] # easy reference to list
 				for i in self.S:
 					# Only add the minimum constraint if meaningful
-					if min_sub_dict[subject][i] > 0:
-						self.m.addCons(quicksum(self.prox_dict[subject][j]*self.X[i,j]
-						 for j in range(len(self.C))) >= min_sub_dict[subject][i])
-
-					# Always add the max constraint
-					self.m.addCons(quicksum(self.prox_dict[subject][j]*self.X[i,j]
-								 for j in self.C) <= max_sub_dict[subject][i])
+					#if d[i] > 0:
+					# make sure they don't request too many
+					#pm = np.sum(self.prox_dict[subject]) # number possible 
+						# courses that satisfy req
+					#lim = np.min([pm, d[i]]) # min(# they want, # possible)
+					#if subject == "IB":
+						#print("\t\t\tlimit:", lim)
+					#self.m.addCons(quicksum(self.prox_dict[subject][j]*self.X[i,j]
+					# for j in self.C) >= lim) # was == but >= might be faster
 		
+					#------------------------------------------------------
+					#					Come Back to This
+					#------------------------------------------------------
+					# This is pissy as prox not updated for new RR courses
+					# I will comment this out and try somethign else as a TEMP fix
+					self.m.addCons(quicksum(self.prox_dict[subject][j]*self.X[i,j]
+						for j in self.C) <= 2) # was == but >= might be faster
+
+					# mini = range(len(self.Cd)-3) # as there are 3 RR's
+					# self.m.addCons(quicksum(self.prox_dict[subject][j]*self.X[i,j]
+					# 	for j in mini) <= 2) # was == but >= might be faster
 		print("\tProximity constraint added")
 
 
@@ -672,7 +750,10 @@ class Optimizer():
 		print("\tDouble Periods in same room")
 
 
+		# Subject specific courses get correct rooms
+		#test = ['Science', 'Art', 'Music', 'Gym']
 		for subject in self.room_constrained_subjects:
+		#for subject in test:
 			sub_courses = self.constrained_courses[subject] # coruses in this subject
 			sub_rooms = self.constrained_rooms[subject] # appropriate rooms
 			for j in sub_courses:
@@ -681,6 +762,38 @@ class Optimizer():
 					self.m.addCons(quicksum(self.Rv[j,s,t] for s in sub_rooms)
 						 == self.Course[j,t])
 		print("\tCourses with subject specific room needs accomodated")
+
+		# Special rooms don't get other types of courses
+		#for subject in ['Art', 'Music', 'Gym']:
+		for subject in ['Art', 'Music', 'Gym', "Resource"]:
+			rooms = self.constrained_rooms[subject]
+			sub_courses = set(self.constrained_courses[subject])
+			non_sub_courses = list(set(self.c_mini) - sub_courses) # set minus
+			# ^^ courses that cannot be in these rooms
+			for j in non_sub_courses:
+				for t in self.T:
+					for s in rooms:
+						self.m.addCons(self.Rv[j,s,t] == 0)
+		print("\tReverse subject constrained rooms enforced")
+
+	def add_rr_constraints(self):
+		"""
+		Adds the resource room requirement
+		"""
+		for r in ["RR1", "RR2", "RR3"]:
+			students = self.RR_student_dict[r]
+			course = self.RR_course_indicies[r]
+			for i in self.S:
+				if i in students:
+					# This student must be in the resource room
+					self.m.addCons(self.X[i,course] == 1)
+				else:
+					# student not allowed in resource room
+					self.m.addCons(self.X[i,course] == 0)
+
+		print("\tAdded RR constraint")
+
+
 
 
 	def add_period_constraints(self):
@@ -708,10 +821,33 @@ class Optimizer():
 			self.m.setRealParam('limits/gap', .33)
 		print("GAP set at", self.GAP)
 
+		# Set up senority multiplier
+		s = {}
+		for i in self.S:
+			g = self.student_dict[i].grade
+			# print("In grade:", g)
+			if g in [7,11]:
+				s[i] = 2
+				#print("\t2")
+			elif g in [8,12]:
+				s[i] = 4
+				#print("\t4")
+			else:
+				s[i] = 1
+				#print("\t1")
+		#print(s)
+		#-------------------------------------------------------
+		#						Fix This!!
+		#-------------------------------------------------------
+		# prox has wrong dimensions as it does not have 
+		# enough columns for the new RR courses
+		# for the moment mini should work, but we need to fix this
+		# where it was self.C I put mini as a temp fix
+		mini = range(len(self.C) - 3)
 		self.m.setObjective(-1*quicksum(self.X[i,j] for i in self.S 
 			for j in self.other_indicies) + 
-			quicksum(self.X[i,j]*self.P[i][j] for i in self.S 
-			for j in self.C), "maximize")
+			quicksum(s[i]*self.X[i,j]*self.P[i][j] for i in self.S 
+			for j in mini), "maximize")
 		print("Objective Set")
 
 	def optimize(self):
@@ -849,7 +985,7 @@ class Optimizer():
 						+ str(num_enrolled) + "."*(40 - len(str(num_enrolled))) + self.get_teacher(j))
 			print("\n")
 
-	def save_grid(self, file_name):
+	def save_grid(self, file_name="grid.txt"):
 		"""
 		Takes in a file name, and saves the grid to a text file at that location
 		Largely, mirrors the print_grid function, just with saves
@@ -1032,11 +1168,46 @@ class Optimizer():
 					if self.P[i,j] > 0 :
 						pref_score += self.P[i,j]
 					else:
-						bad_assignments.append(self.Cd[j])
+						# need to make sure not second half of double
+						d = 0
+						try:
+							if self.Db[j-1] == 1:
+								d += 1
+						except:
+							pass
+
+						if d == 0:
+							# then it was a bad assignment
+							bad_assignments.append(self.Cd[j])
+
 			s = "Student " + str(i) + " gets score " + str(pref_score)
 			if bad_assignments != []:
-				s += "(badly assigned to " + str(bad_assignments) + ")"
+				s += " (badly assigned to " + str(bad_assignments) + ")"
 			print(s)
+
+	def get_score(self, i):
+		"""
+		gets the score for a student index i
+		"""
+		s = 0
+		# ------------------------------------------------
+		#				Fix the m, should be self.C
+		# ------------------------------------------------
+		for j in m:
+			if self.XV[i,j] == 1:
+				s += self.P[i][j]
+		return s
+
+	def save_dicts(self):
+		"""
+		Saves the variable dictionaries to the save_location folder
+		"""
+		print("Pickling solutions")
+		at = self.save_location
+		pickle.dump(self.XV, open(at+"/xv.pkl", 'wb'), pickle.HIGHEST_PROTOCOL)
+		pickle.dump(self.CourseV, open(at+"/coursev.pkl", 'wb'), pickle.HIGHEST_PROTOCOL)
+		pickle.dump(self.RoomV, open(at+"/roomv.pkl", 'wb'), pickle.HIGHEST_PROTOCOL)
+		pickle.dump(self.UV, open(at+"/uv.pkl", 'wb'), pickle.HIGHEST_PROTOCOL)
 
 
 if __name__ == "__main__":
@@ -1054,80 +1225,178 @@ if __name__ == "__main__":
 
 
 	#LP_input = pd.read_csv("test_LP_input.csv")
-	LP_input = pd.read_csv("~/Desktop/test_pref/LP_input.csv")
-	teacher = pd.read_csv("test_teacher_Df.csv")
+	#LP_input = pd.read_csv("~/Desktop/test_pref/LP_input.csv") # most recent
+	LP_input = pd.read_csv("~/Desktop/test_pref/LP_Input4.csv")
+	#teacher = pd.read_csv("test_teacher_Df.csv") # most recent
+	teacher = pd.read_csv("~/Desktop/test_pref/Teacher_Template_filled2.csv")
 	#prefs = pd.read_csv("test_pref_input_df.csv")
-	prefs = pd.read_csv("~/Desktop/test_pref/processed_preference_data.csv")
+	prefs = pd.read_csv("~/Desktop/test_pref/processed_preference_data2.csv")
 	#grades = pd.read_csv("OptTestFiles/grades.csv")
-	grades = pd.DataFrame({'0':range(1,prefs.shape[0] +1), '1':10*np.ones(prefs.shape[0])})
-	prox =pd.read_csv("test_prox.csv")
+	#grades = pd.DataFrame({'0':range(1,prefs.shape[0] +1), '1':10*np.ones(prefs.shape[0])})
+	prox =pd.read_csv("~/Desktop/test_pref/Proximity3.csv") # before without 2
 
 	# Get student dictionary
 	hs_prefs = pd.read_csv("~/Desktop/test_pref/High School Form2.csv")
 	ms_prefs = pd.read_csv("~/Desktop/test_pref/Middle School form2.csv")
-	student_dict = metadata(hs_prefs, ms_prefs)
+
+
+
+
+	#student_dict = metadata(hs_prefs, ms_prefs)
+	student_dict, prefs = sim6(30, hs_prefs, ms_prefs, prefs)
+
+
+	# Resource Room students
+	rr = pd.read_csv("~/Desktop/test_pref/resource_room.csv")
 
 	# Get number of courses dictionary
 	num_courses = get_num_courses(LP_input, hs_prefs, ms_prefs)
-	# I think there are issues with this
-	# 1) I see Nan?
-	# 2) I see a lot of 0's, i am thinking if 0 do not put constraint?
-	# For now I am not bothering with this at all
 
-
-	# print("Exiting Script")
-	# raise SystemExit
-
+	r = Requirement(6, "People and Literature", "Inquiry and Tools")
+	r2 = Requirement(9, 'African Studies', 'Latin American Literature')
+	# mr = MiniRequirement(r)
+	
+	save_loc = "test_wed" # this should be a folder
 	O = Optimizer(prefs = prefs,
 					LP_input = LP_input,
 					teacher = teacher,
 					GAP = .33,
 					student_dict = student_dict,
 					num_courses = num_courses,
-					requirements = [],
+					requirements = [r, r2],
 					prox = prox,
-					save_location = "test_rooms")
+					rr_df = rr,
+					save_location = save_loc)
+	
+	# raise SystemExit
+
 	# Add constraints
 	print("Adding Constraints")
 	O.add_basic_constraints()
 	O.add_max_constraint()
 	#self.add_min_constraint()
-	#O.add_proximity_constraints()
+	O.add_proximity_constraints()
 	O.add_teacher_constraints()
 	O.add_course_constraints()
-	#O.add_grade_level_requirements()
-	#O.add_room_constraints()
+	O.add_grade_level_requirements()
+	O.add_room_constraints()
+	O.add_rr_constraints()
 	O.add_period_constraints()
 	print("Constraints Added")
 
 	O.set_objective()
 
+	
+	#--------------------
+	#--------------------
+	O.optimize()
+	#--------------------
+	#--------------------
 
-	#O.optimize()
 
-	try:
-		at = O.save_location + "/optimizer_save"
-		with open(at, 'wb') as output:
-			pickle.dump(self, output, pickle.HIGHEST_PROTOCOL)
-		
-		print("Saved solution (as Optimizer instance) to", at)
-	except:
-		print("save failed")
-		pass
+
+
 
 	# load the solution with rooms
-	at = "test_rooms/"
-	O.XV = pickle.load(open(at+"xv.pkl", 'rb'))
-	O.CourseV = pickle.load(open(at+"coursev.pkl", 'rb'))
-	O.RoomV = pickle.load(open(at+"roomv.pkl", 'rb'))
+	# at = save_loc
+	# O.XV = pickle.load(open(at+"xv.pkl", 'rb'))
+	# O.CourseV = pickle.load(open(at+"coursev.pkl", 'rb'))
+	# O.RoomV = pickle.load(open(at+"roomv.pkl", 'rb'))
 
-	#O.assign_value_dicts()
+	# Save soltuions
+	print("Pickling solutions")
+	pickle.dump(O.XV, open(save_loc+"/xv.pkl", 'wb'), pickle.HIGHEST_PROTOCOL)
+	pickle.dump(O.CourseV, open(save_loc+"/coursev.pkl", 'wb'), pickle.HIGHEST_PROTOCOL)
+	pickle.dump(O.RoomV, open(save_loc+"/roomv.pkl", 'wb'), pickle.HIGHEST_PROTOCOL)
+	pickle.dump(O.UV, open(save_loc+"/uv.pkl", 'wb'), pickle.HIGHEST_PROTOCOL)
+
+	if not O.m.getStatus() == 'infeasible':
+		O.assign_value_dicts()
+	else:
+		print("Not feasible soltuion")
 	O.print_grid()
 	#O.print_grid_no_room()
 	O.print_all_student_schedules(rooms = True)
 	O.diagnostic()
 
 	#O.save_grid_no_rooms("test_grid_no_rooms.txt")
-	#O.save_all_student_schedules(rooms=False)
+	O.save_grid()
+	O.save_all_student_schedules(rooms=True)
 
+	# for i in O.S:
+	# 	score = 0
+	# 	for j in O.C:
+	# 		score += O.P[i][j]*O.XV[i,j]
+	# 	print("Student", i, ":", score)
+
+# num_first = 0
+# num_second = 0
+# num_third = 0
+# num_other = 0
+# m = range(len(O.C) - 3)
+# for i in O.S:
+# 	for j in m:
+# 		if (O.XV[i,j] == 1) and (O.P[i][j] == 3):
+# 			num_first += 1
+# 		elif (O.XV[i,j] == 1) and (O.P[i][j] == 2):
+# 			num_second += 1
+# 		elif (O.XV[i,j] == 1) and (O.P[i][j] == 1):
+# 			num_third += 1
+# 		elif (O.XV[i,j] == 1) and (O.P[i][j] == 0):
+# 			# need to make sure not a double period second part
+# 			d = 1
+# 			try:
+# 				d -= O.Db[j-1]
+# 			except:
+# 				pass
+# 			num_other += d
+# print("Number first choices given:", num_first)
+# print("Number second choices given:", num_second)
+# print("Number third choices given:", num_third)
+# print("Number bad assignments:", num_other)
+
+# def get_score(i):
+# 	"""
+# 	gets the score for a student index i
+# 	"""
+# 	s = 0
+# 	for j in m:
+# 		if O.XV[i,j] == 1:
+# 			s += O.P[i][j]
+# 	return s
+
+# # # Make a histogram of scores
+# scores = []
+# for i in O.S:
+# 	s = 0
+# 	for j in m:
+# 		if O.XV[i,j] == 1:
+# 			s += O.P[i][j]
+# 	scores.append(s)
+# plt.hist(scores, bins=18)
+# plt.title("Histogram of Student Scores")
+# plt.xlabel("Score")
+# plt.savefig(save_loc +"/score_hist.png", dpi=300)
+
+# # Score by Grade plot
+# sg = {}
+# for g in [5,6,7,8,9,10,11,12]:
+# 	sg[g] = []
+# 	for i in O.S:
+# 		if O.student_dict[i].grade == g:
+# 			sg[g].append(get_score(i))
+
+for g in [5,6,7,8,9,10,11,12]:
+	l = "Grade " + str(g)
+	plt.scatter(g*np.ones(len(sg[g])), sg[g], label=l, alpha=.35)
+	avg = np.mean(sg[g])
+	plt.plot(g, avg, color="red", marker="_", ms=25)
+plt.xlabel("Grade")
+plt.ylabel("Score")
+plt.title("Scores by Grade")
+plt.savefig(save_loc + "/score_grade.png", dpi=400)
+
+
+
+# 
 
