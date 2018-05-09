@@ -74,6 +74,11 @@ def pref_gen():
         # assign middle school choices. Row index is num_rows of hs_data + i
         # (so MS rows would be after HS rows in result)
         result.iloc[(ms_start_index + i),course_index(ms_data.iloc[i,:])] = ms_choices
-
+    
+    result['RR1'] = np.zeros(shape=result.shape[0],dtype=np.int32)
+    result['RR2'] = np.zeros(shape=result.shape[0],dtype=np.int32)
+    result['RR3'] = np.zeros(shape=result.shape[0],dtype=np.int32)
+    
     result = result.drop('missing', axis = 1)
+    
     return result
