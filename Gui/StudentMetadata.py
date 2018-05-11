@@ -3,7 +3,7 @@ import pandas as pd
 
 
 class Student:
-    def __init__(self, email="", first_name="", last_name="", s_id="", grade=""):
+    def __init__(self, email="", first_name="", last_name="", s_id=0, grade=0):
         """
         Initializes values to empty string if for some reason not given
         """
@@ -189,8 +189,9 @@ def sim6(num_6th, HSF, MSF, processed_pref_data):
 
     for s in np.arange(start_idx_6th, start_idx_6th + num_6th): 
         # email, first_name, last_name, s_id, grade
-        students[s] = Student('DummyEmail'+str(s), 'DummyFName'+str(s), 'DummyLName'+str(s), 'DummyID'+str(s), '6')
+        students[s] = Student('DummyEmail'+str(s), 'DummyFName'+str(s), 'DummyLName'+str(s), 'DummyID'+str(s), 6)
     
+    pref_data.to_csv("with6th.csv")
     return students, pref_data
 
 #sim6_students = sim6(40, "HSF_5_4.csv", "MSF_5_4.csv", "processed_preference_data.csv")

@@ -47,7 +47,11 @@ class SavedConfig():
 				teacher_df,
 				preference_input_df,
 				prox,
-				requirements):
+				requirements,
+				hs_preference_df,
+				ms_preference_df,
+				rr_df,
+				student_dict):
 		"""
 		Saves the required filed
 
@@ -67,35 +71,18 @@ class SavedConfig():
 		**These are all the same as we have in the MainApplication fileds**
 		"""
 
-		# The old version
-		# self.initial_file_df = initial_file_df
-		# self.courses = courses
-		# self.requirements = requirements
-		# self.requirements = [] # list of MiniRequirements
-		# for r in requirements:
-		# 	self.requirements.append(MiniRequirement(r))
-		# self.preference_input = preference_input
-		# self.LP_input = LP_input
-		# self.teacher_file = teacher_file
-
-
-		# self.initial_file = initial_file
-		# self.teacher_file = teacher_file
-		# self.preference_file = preference_file
-		# self.completed_preference_file = completed_preference_file
-		# self.initial_file_df = initial_file_df
-		# self.courses = courses
-		# self.course_list_selected = course_list_selected
-		# self.preference_input = preference_input
-		# self.LP_input = LP_input
 
 		self.initial_file_df = initial_file_df
 		self.courses = courses
 		self.course_list_selected = course_list_selected
 		self.LP_input = LP_input
 		self.teacher_df = teacher_df
+		self.hs_preference_df = hs_preference_df
+		self.ms_preference_df = ms_preference_df
 		self.preference_input_df = preference_input_df
 		self.prox = prox
+		self.rr_df = rr_df
+		self.student_dict = student_dict
 
 		for r in requirements:
 			self.requirements.append(MiniRequirement(r))

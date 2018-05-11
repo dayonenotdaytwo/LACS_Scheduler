@@ -13,6 +13,7 @@ as well as relevant statistics are included
 
 import numpy as np
 import pandas as pd
+import pickle
 
 class Solution():
 	"""
@@ -28,9 +29,8 @@ class Solution():
 
 	"""
 
-	def __init__(self, courses, rooms, teachers, students,
-			x_var_dict, c_var_dict, r_var_dict,
-			u_var_dict):
+	def __init__(self, Cd, C, XV, CourseV,
+			RV, student_dict, I_C_dict, Ta, R, m, save_loc):
 		"""
 
 		Parameters
@@ -54,15 +54,17 @@ class Solution():
 		"""
 
 		# set inputs
-		self.m = model
-		self.Cd = courses
-		self.R = rooms
-		self.Ta = teachers
-		self.S = students
-		self.XV = x_var_dict
-		self.CourseV = c_var_dict
-		self.RV = r_var_dict
-		self.UV = u_var_dict
+		self.Cd = Cd
+		self.C = C
+		self.XV = XV
+		self.CourseV = CourseV
+		self.RV = RV
+		self.student_dict = student_dict
+		self.I_C_dict = I_C_dict
+		self.Ta = Ta
+		self.R = R
+		self.m = m
+		self.save_loc = save_loc
 
 		# Get values in dictinary
 		# first get list of courses that are not other:
@@ -70,6 +72,17 @@ class Solution():
 		for j in self.Cd:
 			if "Other" not in self.Cd[j] and "Empty" not in self.Cd[j]:
 				c_mini.append(j)
+
+
+
+
+	def save(self):
+		"""
+		Pickles the soltuions and saves it to the save location
+		"""
+		pickle.dump(self, open(save_loc, "wb"), pickle.HIGHEST_PROTOCOL)
+		print("Save compelted")
+
 
 
 

@@ -18,6 +18,12 @@ import pickle
 import timeit # just to check setuptime
 import datetime
 
+# Apparently need this to be used with tkinter?
+import matplotlib
+matplotlib.use('agg')
+import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
+
 from Requirement import *
 from StudentMetadata import *
 
@@ -186,6 +192,7 @@ class Optimizer():
 
 		# Quick shortening to see if it works?
 		#self.S = self.S[3:13]
+		self.S = self.S[-30:]
 
 		# Add Variables
 		print("Adding Variables")
@@ -843,12 +850,19 @@ class Optimizer():
 		# enough columns for the new RR courses
 		# for the moment mini should work, but we need to fix this
 		# where it was self.C I put mini as a temp fix
-		mini = range(len(self.C) - 3)
+		#mini = range(len(self.C) - 3)
 		self.m.setObjective(-1*quicksum(self.X[i,j] for i in self.S 
 			for j in self.other_indicies) + 
 			quicksum(s[i]*self.X[i,j]*self.P[i][j] for i in self.S 
-			for j in mini), "maximize")
-		print("Objective Set")
+			for j in O.C), "maximize")
+
+
+		# Quick test with just 6th graders without senority
+		# self.m.setObjective(-1*quicksum(self.X[i,j] for i in self.S 
+		# 	for j in self.other_indicies) + 
+		# 	quicksum(self.X[i,j]*self.P[i][j] for i in self.S 
+		# 	for j in O.C), "maximize")
+		# print("Objective Set")
 
 	def optimize(self):
 		"""
@@ -1190,10 +1204,7 @@ class Optimizer():
 		gets the score for a student index i
 		"""
 		s = 0
-		# ------------------------------------------------
-		#				Fix the m, should be self.C
-		# ------------------------------------------------
-		for j in m:
+		for j in self.C:
 			if self.XV[i,j] == 1:
 				s += self.P[i][j]
 		return s
@@ -1209,6 +1220,50 @@ class Optimizer():
 		pickle.dump(self.RoomV, open(at+"/roomv.pkl", 'wb'), pickle.HIGHEST_PROTOCOL)
 		pickle.dump(self.UV, open(at+"/uv.pkl", 'wb'), pickle.HIGHEST_PROTOCOL)
 
+	def make_hist(self, name="score_hist.png", save=True):
+		"""
+		Makes histogram of scores
+		"""
+		# # Make a histogram of scores
+		scores = []
+		for i in self.S:
+			s = 0
+			for j in self.C:
+				if self.XV[i,j] == 1:
+					s += self.P[i][j]
+			scores.append(s)
+		plt.hist(scores, bins=18)
+		plt.title("Histogram of Student Scores")
+		plt.xlabel("Score")
+		if save:
+			plt.savefig(save_loc +"/" + name, dpi=300)
+		else:
+			plt.show()
+
+	def plot_score_by_grade(self, name="scorce_grade.png", save=True):
+		"""
+		Makes plot showing score breakdown by grade
+		"""
+		# Score by Grade plot
+		sg = {}
+		for g in [5,6,7,8,9,10,11,12]:
+			sg[g] = []
+			for i in self.S:
+				if self.student_dict[i].grade == g:
+					sg[g].append(self.get_score(i))
+
+		for g in [5,6,7,8,9,10,11,12]:
+			l = "Grade " + str(g)
+			plt.scatter(g*np.ones(len(sg[g])), sg[g], label=l, alpha=.35)
+			avg = np.mean(sg[g])
+			plt.plot(g, avg, color="red", marker="_", ms=25)
+		plt.xlabel("Grade")
+		plt.ylabel("Score")
+		plt.title("Scores by Grade")
+		if save:
+			plt.savefig(save_loc + "/score_grade.png", dpi=400)
+		else:
+			plt.show()
 
 if __name__ == "__main__":
 	"""
@@ -1243,7 +1298,10 @@ if __name__ == "__main__":
 
 
 	#student_dict = metadata(hs_prefs, ms_prefs)
-	student_dict, prefs = sim6(30, hs_prefs, ms_prefs, prefs)
+	n_6th = 10
+	student_dict, prefs = sim6(n_6th, hs_prefs, ms_prefs, prefs)
+	#prefs = pd.read_csv("with6th.csv")
+	# prefs = prefs[-1*n_6th:] # just 6th graders
 
 
 	# Resource Room students
@@ -1260,7 +1318,7 @@ if __name__ == "__main__":
 	O = Optimizer(prefs = prefs,
 					LP_input = LP_input,
 					teacher = teacher,
-					GAP = .33,
+					GAP = .3,
 					student_dict = student_dict,
 					num_courses = num_courses,
 					requirements = [r, r2],
@@ -1269,6 +1327,8 @@ if __name__ == "__main__":
 					save_location = save_loc)
 	
 	# raise SystemExit
+	# re-index O.S just for the students real quick
+	#O.S = range(n_6th)
 
 	# Add constraints
 	print("Adding Constraints")
@@ -1292,7 +1352,6 @@ if __name__ == "__main__":
 	O.optimize()
 	#--------------------
 	#--------------------
-
 
 
 
@@ -1322,6 +1381,10 @@ if __name__ == "__main__":
 	#O.save_grid_no_rooms("test_grid_no_rooms.txt")
 	O.save_grid()
 	O.save_all_student_schedules(rooms=True)
+
+	O.make_hist(save=False)
+	O.plot_score_by_grade(save=False)
+
 
 	# for i in O.S:
 	# 	score = 0
@@ -1386,15 +1449,15 @@ if __name__ == "__main__":
 # 		if O.student_dict[i].grade == g:
 # 			sg[g].append(get_score(i))
 
-for g in [5,6,7,8,9,10,11,12]:
-	l = "Grade " + str(g)
-	plt.scatter(g*np.ones(len(sg[g])), sg[g], label=l, alpha=.35)
-	avg = np.mean(sg[g])
-	plt.plot(g, avg, color="red", marker="_", ms=25)
-plt.xlabel("Grade")
-plt.ylabel("Score")
-plt.title("Scores by Grade")
-plt.savefig(save_loc + "/score_grade.png", dpi=400)
+# for g in [5,6,7,8,9,10,11,12]:
+# 	l = "Grade " + str(g)
+# 	plt.scatter(g*np.ones(len(sg[g])), sg[g], label=l, alpha=.35)
+# 	avg = np.mean(sg[g])
+# 	plt.plot(g, avg, color="red", marker="_", ms=25)
+# plt.xlabel("Grade")
+# plt.ylabel("Score")
+# plt.title("Scores by Grade")
+# plt.savefig(save_loc + "/score_grade.png", dpi=400)
 
 
 

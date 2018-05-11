@@ -18,6 +18,7 @@ from Popup import *
 from MenuBar import *
 from Optimizer import *
 from StudentMetadata import *
+from Solution import *
 
 # Helper functions
 import clean_data
@@ -67,6 +68,7 @@ class MainApplication(tk.Frame):
 		self.hs_preference_df = None
 		self.preference_input_df = None
 		self.prox = None
+		self.rr_df = None
 
 		# New with data (and Justina's Script)
 		# These are assigned when pref matrix made
@@ -145,6 +147,12 @@ class MainApplication(tk.Frame):
 		tk.Button(self.file_select_frame, text="Select", 
 			command=self.get_hs_preference_file).grid(row=6, column=2)
 
+		s = "Step 7: Upload Resource Room Student List:"
+		tk.Label(self.file_select_frame, text=s).grid(row=7, column=1,
+			sticky="W")
+		tk.Button(self.file_select_frame, text="Select", 
+			command=self.get_rr_list).grid(row=7, column=2)
+
 
 		#----------------------------------------------------------
 		#					Add RequirementFrame
@@ -206,7 +214,8 @@ class MainApplication(tk.Frame):
 			command = self.menubar.open).grid(row=2, column=2, padx=15)
 
 		# Add MIPGap slider
-		tk.Label(self.opt_frame, text="Speed Adjust (smaller is slower)").grid(
+		tk.Label(self.opt_frame,
+			 text="Speed Adjust (smaller is slower--.3 is recommended)").grid(
 			row=3, column=1, columnspan=2)
 		self.slider = tk.Scale(self.opt_frame, from_=0, to_=1,
 			orient=tk.HORIZONTAL, resolution=0.01, length=200)
@@ -240,7 +249,16 @@ class MainApplication(tk.Frame):
 		# save the file name
 		initial_file_name = askopenfilename()
 		#df = pd.read_csv(initial_file_name)
-		df = pd.read_excel(initial_file_name) # <-- it is an excel file
+		extension = initial_file_name[initial_file_name.rfind(".")+1:]
+		if extension == "xlsx":
+			df = pd.read_excel(initial_file_name) # <-- it is an excel file\
+		elif extension == "csv":
+			df = pd.read_csv(initial_file_name)
+		else:
+			messagebox.showerror("Error", "Unreckognized file type, must be .csv or .xlsx")
+			return 
+
+
 		self.initial_file_df = df
 
 		# make sure it has the right column header
@@ -276,7 +294,6 @@ class MainApplication(tk.Frame):
 		saved in a previous configuration
 		"""
 
-		print("Running Junstina's function")
 
 		# make sure we have an initial file to work with
 		if self.initial_file_df is None:
@@ -293,6 +310,8 @@ class MainApplication(tk.Frame):
 		# Create the final dataframe for LP input
 		self.LP_input = clean_data.create_LP_input(intermediate_df, self.initial_file_df)
 		#               ^^ function from Justina
+		# print(self.LP_input)
+		# print("It has columns:", self.LP_input.columns)
 
 		# Create the proximity matrix
 		self.prox = clean_data.dept_proximity(self.LP_input)
@@ -314,11 +333,22 @@ class MainApplication(tk.Frame):
 			text = "  " + self.get_file_name(teacher_file_name)).grid(
 			row = 3, column=3, sticky="W")
 		self.teacher_df = pd.read_csv(teacher_file_name) # there is a header
-		print(self.teacher_df)
 
 
 	def make_preference_form(self):
-		print("Add Dae Won's script to generate form")
+		s = "Select where you would lieke the file saved."
+		s+= "A file title 'google_form_input.csv' will be saved"
+		messagebox.showinfo("Alert", s)
+		directory = askdirectory()
+		file_name = "google_form_input.csv"
+
+		if self.LP_input is None:
+			s =  "Must have gone through all of the above steps first"
+			message.showerror("Error", s)
+		else:
+			self.LP_input.to_csv(directory + "/" + file_name, index=False)
+
+
 
 
 	def get_preference_file(self):
@@ -330,11 +360,10 @@ class MainApplication(tk.Frame):
 		"""
 		# In the interum, as don't know where that script is
 		# just use the flattened for testing
-		s = "Waiting on Justina's Prefernce Script, for now, just select"
-		s+= " the flattened preference so we having some file to test with"
+		# s = "Waiting on Justina's Prefernce Script, for now, just select"
+		# s+= " the flattened preference so we having some file to test with"
+		s = "This function should not be called anymore, if you see this, we have a problem"
 		messagebox.showinfo("Alert", s)
-
-
 
 		completed_preference_file_name = askopenfilename()
 		tk.Label(self.file_select_frame, 
@@ -418,37 +447,45 @@ class MainApplication(tk.Frame):
 		ms_choices = []
 
 		for item in temp_list:
-		    hs_choices.append(int(item[-2]))
-		    
+			hs_choices.append(int(item[-2]))
+			
 		for item in temp_list2:
-		    ms_choices.append(int(item[-2]))
-		    
+			ms_choices.append(int(item[-2]))
+			
 		# initialize final result of the preprocessing
 		result = pd.DataFrame(0,columns = course_list, index = range(hs_data.shape[0]+ms_data.shape[0]))
 
 		# helper function which returns the corresponding indices in course_list for each row of responses
 		def course_index(input_array):
-		    indices = []
-		    for item in input_array:
-		        indices.append(course_list.index(item))
-		    return np.array(indices)
+			indices = []
+			for item in input_array:
+				indices.append(course_list.index(item))
+			return np.array(indices)
 
 		for i in range(hs_data.shape[0]):
-		    # assign hs_choices values to the corresponding indices in the result data
-		    result.iloc[i,course_index(hs_data.iloc[i,:])] = hs_choices
+			# assign hs_choices values to the corresponding indices in the result data
+			result.iloc[i,course_index(hs_data.iloc[i,:])] = hs_choices
 
-		    
+			
 		ms_start_index = hs_data.shape[0]
 		for i in range(ms_data.shape[0]):
-		    # assign middle school choices. Row index is num_rows of hs_data + i
-		    # (so MS rows would be after HS rows in result)
-		    result.iloc[(ms_start_index + i),course_index(ms_data.iloc[i,:])] = ms_choices
-		    
+			# assign middle school choices. Row index is num_rows of hs_data + i
+			# (so MS rows would be after HS rows in result)
+			result.iloc[(ms_start_index + i),course_index(ms_data.iloc[i,:])] = ms_choices
+			
 		self.preference_input_df = result
 		print(self.preference_input_df)
 
 
-
+	def get_rr_list(self):
+		"""
+		Saves the dataframe that has the Resource room student ID's
+		"""
+		file = askopenfilename()
+		tk.Label(self.file_select_frame, 
+			text = " " + self.get_file_name(file)
+			).grid(row=7, column=3, sticky="W")
+		self.rr_df = pd.read_csv(file)
 
 
 
@@ -645,7 +682,9 @@ class MainApplication(tk.Frame):
 					prox = self.prox,
 					student_dict = self.student_dict,
 					num_courses = self.need_course_num_dict,
-					save_location  = self.optimization_output_directory)
+					save_location  = self.optimization_output_directory,
+					rr_df = self.rr_df)
+
 
 		print("Adding Constraints")
 		O.add_basic_constraints()
@@ -654,18 +693,29 @@ class MainApplication(tk.Frame):
 		O.add_proximity_constraints()
 		O.add_teacher_constraints()
 		O.add_course_constraints()
-		#self.add_grade_level_requirements()
-		print("\n\n\n")
-		print(O.Cd)
-		print("\n\n")
+		O.add_grade_level_requirements()
 		O.add_room_constraints()
 		O.add_period_constraints()
+		O.add_room_constraints()
 		print("Constraints Added")
 
 		O.set_objective()
 
 		O.optimize()
+
 		O.assign_value_dicts()
+
+		sol = Solution(Cd = O.Cd,
+			C = O.C,
+			XV = O.XV,
+			CourseV = O.CourseV,
+			RV = O.RV,
+			student_dict = O.student_dict,
+			I_C_dict = O.I_C_dict,
+			Ta = O.Ta,
+			R = O.R,
+			m = O.m)
+
 		O.print_grid()
 		O.print_all_student_schedules()
 		O.diagnostic()
@@ -675,9 +725,13 @@ class MainApplication(tk.Frame):
 
 
 if __name__ == "__main__":
-    root = tk.Tk()
-    root.wm_title("Schedule Optimizer")
-    root["bg"] = "grey96"
-    root.geometry("800x800") # fiddle with this, see if you can make it adaptive
-    MainApplication(root)
-    root.mainloop()
+	print("Starting")
+	root = tk.Tk()
+	print("Root created")
+	root.wm_title("Schedule Optimizer")
+	print("Title assigned")
+	root["bg"] = "grey96"
+	root.geometry("800x800") # fiddle with this, see if you can make it adaptive
+	print("Starting main app")
+	MainApplication(root)
+	root.mainloop()
