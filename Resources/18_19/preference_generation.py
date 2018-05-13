@@ -56,6 +56,9 @@ def pref_gen():
 
     for i in range(hs_data.shape[0]):
         missing_and_duplicated(hs_data.iloc[i,:])
+    
+    for i in range(ms_data.shape[0]):
+        missing_and_duplicated(ms_data.iloc[i,:])
 
     # helper function which returns the corresponding indices in course_list for each row of responses
     def course_index(input_array):
@@ -63,13 +66,15 @@ def pref_gen():
         for item in input_array:
             indices.append(course_list.index(item))
         return np.array(indices)
+    
+    result = pd.DataFrame(0,columns = course_list, index = range(hs_data.shape[0]+ms_data.shape[0]))
 
     for i in range(hs_data.shape[0]):
         # assign hs_choices values to the corresponding indices in the result data
         result.iloc[i,course_index(hs_data.iloc[i,:])] = hs_choices
 
-
     ms_start_index = hs_data.shape[0]
+    
     for i in range(ms_data.shape[0]):
         # assign middle school choices. Row index is num_rows of hs_data + i
         # (so MS rows would be after HS rows in result)
