@@ -96,6 +96,17 @@ def create_LP_input(full_course_info, original_course_input):
 	# convert "yes" to 1, keep 0
 	all_info['Double Period'] = all_info['Double Period'].map({'Yes': 1, 0:0})
 	all_info.reset_index(drop=True)
+
+	# add in special ed reqs 
+	num_rr = 3
+	for room in range(num_rr):
+	    rr = pd.Series(['RR'+str(room + 1), np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 'Resource'], index=all_info.columns)
+	    all_info = all_info.append(rr, ignore_index=True )
+
+	# strip whitespace
+	all_info_obj = all_info.select_dtypes(['object'])
+	all_info[all_info_obj.columns] = all_info_obj.apply(lambda x: x.str.strip())
+
 	#all_info.to_csv(file_location + '/LP_Input.csv', index=False)
 	print("\n\n\nThis is what would be saved as LP Input:")
 	print(all_info)
