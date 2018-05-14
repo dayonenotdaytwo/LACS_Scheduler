@@ -474,7 +474,7 @@ class MainApplication(tk.Frame):
 			result.iloc[(ms_start_index + i),course_index(ms_data.iloc[i,:])] = ms_choices
 			
 		self.preference_input_df = result
-		print(self.preference_input_df)
+		#print(self.preference_input_df)
 
 
 	def get_rr_list(self):
