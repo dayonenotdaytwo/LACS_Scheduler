@@ -721,9 +721,6 @@ class MainApplication(tk.Frame):
 		O.diagnostic()
 
 
-
-
-
 if __name__ == "__main__":
 	print("Starting")
 	root = tk.Tk()
