@@ -436,78 +436,80 @@ class MainApplication(tk.Frame):
 
 		course_list.append("missing")
 
-		hs_response = hs_response.fillna('missing')
-		ms_response = ms_response.fillna('missing')
-		hs_response = hs_response.drop( 'IIC Mathematics []', axis = 1)
 
-		change_dict = {"HS English TBA": "Non-Western Writers",
-				 'Intermediate Algebra and Geometry': "Discovering Algebra",
-				 'Beginning Algebra and Geometry': "Discovering Geometry",
-				 'Advanced/In-Depth French': "Advanced French",
-				 'Social Studies (BE)': "Governance and Dissent"}
+        hs_response = hs_response.fillna('missing')
+        ms_response = ms_response.fillna('missing')
+        hs_response = hs_response.drop( 'IIC Mathematics []', axis = 1)
 
-		for val in change_dict:
-			hs_response.replace(val, change_dict[val], inplace=True)
-			ms_response.replace(val, change_dict[val], inplace=True)
+        change_dict = {"HS English TBA": "Non-Western Writers",
+                 'Intermediate Algebra and Geometry': "Discovering Geometry",
+                 'Beginning Algebra and Geometry': "Discovering Algebra",
+                 'Advanced/In-Depth French': "Advanced French",
+                 'Social Studies (BE)': "Governance and Dissent"}
 
-		hs_data = hs_response.iloc[:, 5:-10]
-		ms_data = ms_response.iloc[:, 5:-10]
+        for val in change_dict:
+            hs_response.replace(val, change_dict[val], inplace=True)
+            ms_response.replace(val, change_dict[val], inplace=True)
 
-		# extract preference levels from the column names
+        hs_data = hs_response.iloc[:, 5:-10]
+        ms_data = ms_response.iloc[:, 5:-10]
 
-		temp_list = hs_response.columns[5:-10]
-		temp_list2 = ms_response.columns[5:-10]
+        # extract preference levels from the column names
 
-		# extracted choice numbers from the column names 
-		hs_choices = []
-		ms_choices = []
+        temp_list = hs_response.columns[5:-10]
+        temp_list2 = ms_response.columns[5:-10]
 
-		for item in temp_list:
-			hs_choices.append(int(item[-2]))
+        # extracted choice numbers from the column names 
+        hs_choices = []
+        ms_choices = []
 
-		for item in temp_list2:
-			ms_choices.append(int(item[-2]))
+        for item in temp_list:
+            hs_choices.append(int(item[-2]))
 
-		# cares only about the first instance of a course in the choice list
-		def missing_and_duplicated(x):
-			missing = x != 'missing'
-			duplicated = x.duplicated()
-			missanddup = np.hstack((missing.values.reshape(-1,1), duplicated.values.reshape(-1,1)))
-			ind = missanddup.all(axis = 1)
-			x[ind] = 'missing'
-			return None
+        for item in temp_list2:
+            ms_choices.append(int(item[-2]))
 
-		for i in range(hs_data.shape[0]):
-			missing_and_duplicated(hs_data.iloc[i,:])
+        # cares only about the first instance of a course in the choice list
+        def missing_and_duplicated(x):
+            missing = x != 'missing'
+            duplicated = x.duplicated()
+            missanddup = np.hstack((missing.values.reshape(-1,1), duplicated.values.reshape(-1,1)))
+            ind = missanddup.all(axis = 1)
+            x[ind] = 'missing'
+            return None
 
-		for i in range(ms_data.shape[0]):
-			missing_and_duplicated(ms_data.iloc[i,:])
+        for i in range(hs_data.shape[0]):
+            missing_and_duplicated(hs_data.iloc[i,:])
 
-		# helper function which returns the corresponding indices in course_list for each row of responses
-		def course_index(input_array):
-			indices = []
-			for item in input_array:
-				indices.append(course_list.index(item))
-			return np.array(indices)
-	
-		result = pd.DataFrame(0,columns = course_list, index = range(hs_data.shape[0]+ms_data.shape[0]))
+        for i in range(ms_data.shape[0]):
+            missing_and_duplicated(ms_data.iloc[i,:])
 
-		for i in range(hs_data.shape[0]):
-			# assign hs_choices values to the corresponding indices in the result data
-			result.iloc[i,course_index(hs_data.iloc[i,:])] = hs_choices
+        # helper function which returns the corresponding indices in course_list for each row of responses
+        def course_index(input_array):
+            indices = []
+            for item in input_array:
+                indices.append(course_list.index(item))
+            return np.array(indices)
+    
+        result = pd.DataFrame(0,columns = course_list, index = range(hs_data.shape[0]+ms_data.shape[0]))
 
-		ms_start_index = hs_data.shape[0]
+        for i in range(hs_data.shape[0]):
+            # assign hs_choices values to the corresponding indices in the result data
+            result.iloc[i,course_index(hs_data.iloc[i,:])] = hs_choices
 
-		for i in range(ms_data.shape[0]):
-			# assign middle school choices. Row index is num_rows of hs_data + i
-			# (so MS rows would be after HS rows in result)
-			result.iloc[(ms_start_index + i),course_index(ms_data.iloc[i,:])] = ms_choices
+        ms_start_index = hs_data.shape[0]
 
-		result['RR1'] = np.zeros(shape=result.shape[0],dtype=np.int32)
-		result['RR2'] = np.zeros(shape=result.shape[0],dtype=np.int32)
-		result['RR3'] = np.zeros(shape=result.shape[0],dtype=np.int32)
+        for i in range(ms_data.shape[0]):
+            # assign middle school choices. Row index is num_rows of hs_data + i
+            # (so MS rows would be after HS rows in result)
+            result.iloc[(ms_start_index + i),course_index(ms_data.iloc[i,:])] = ms_choices
 
-		result = result.drop('missing', axis = 1)
+        result['RR1'] = np.zeros(shape=result.shape[0],dtype=np.int32)
+        result['RR2'] = np.zeros(shape=result.shape[0],dtype=np.int32)
+        result['RR3'] = np.zeros(shape=result.shape[0],dtype=np.int32)
+
+        result = result.drop('missing', axis = 1)
+
 		self.preference_input_df = result
 		self.preference_input_df.to_csv("~Desktop/test_pref/read_data/test_pref_out.csv")
 		print(self.preference_input_df)
