@@ -441,8 +441,8 @@ class MainApplication(tk.Frame):
         hs_response = hs_response.drop( 'IIC Mathematics []', axis = 1)
 
         change_dict = {"HS English TBA": "Non-Western Writers",
-                 'Intermediate Algebra and Geometry': "Discovering Algebra",
-                 'Beginning Algebra and Geometry': "Discovering Geometry",
+                 'Intermediate Algebra and Geometry': "Discovering Geometry",
+                 'Beginning Algebra and Geometry': "Discovering Algebra",
                  'Advanced/In-Depth French': "Advanced French",
                  'Social Studies (BE)': "Governance and Dissent"}
 
