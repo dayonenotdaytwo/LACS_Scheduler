@@ -1,8 +1,8 @@
 DummyFName164 DummyLName164 (grade 6)
 -------------------------------------------------------------------------------------
-Period 1: MS/HS PE................................Gym2................Jodie Binns
-Period 2: Other V2................................N/A.................Other
-Period 3: People and Literature...................U7..................Mike Levy
-Period 4: People and Literature II................U7..................
-Period 7: Computer Literacy.......................L4..................Mike Levy
-Period 8: MS Science (Natty Simpson)..............Sci A...............Natty Simpson
+Period 1: Spanish A V2............................U4/5................Kaile Tsapis
+Period 2: Inquiry and Tools.......................U1..................Shaun Errichiello
+Period 3: Inquiry and Tools II....................U1..................
+Period 4: 7th-8th Grade Art.......................Art.................Garry Bercow
+Period 7: French A................................L3..................Aeriana Cedarstrom
+Period 8: MS/HS PE................................Gym2................Jodie Binns

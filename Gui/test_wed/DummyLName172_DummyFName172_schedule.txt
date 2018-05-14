@@ -1,8 +1,8 @@
 DummyFName172 DummyLName172 (grade 6)
 -------------------------------------------------------------------------------------
 Period 1: Other...................................N/A.................Other
-Period 2: Spanish A...............................U3..................Kaile Tsapis
-Period 3: People and Literature...................U7..................Mike Levy
-Period 4: People and Literature II................U7..................
-Period 7: Computer Literacy.......................L4..................Mike Levy
-Period 8: MS Science (Natty Simpson)..............Sci A...............Natty Simpson
+Period 2: People and Literature...................L4..................Mike Levy
+Period 3: People and Literature II................L4..................
+Period 4: MS Science (Natty Simpson)..............Sci B...............Natty Simpson
+Period 7: Computer Science........................U3..................Natty Simpson
+Period 8: Other V6................................N/A.................Other

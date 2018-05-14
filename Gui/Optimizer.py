@@ -191,8 +191,8 @@ class Optimizer():
 		self.m = Model()
 
 		# Quick shortening to see if it works?
-		#self.S = self.S[3:13]
-		self.S = self.S[-30:]
+		self.S = self.S[0:30]
+		#self.S = self.S[-100:]
 
 		# Add Variables
 		print("Adding Variables")
@@ -743,7 +743,8 @@ class Optimizer():
 		for s in self.R:
 			for t in self.T:
 				# m.addConstr(quicksum(Rv[j,s,t] for j in c_mini) <= 1)
-				self.m.addCons(quicksum(self.Rv[j,s,t] for j in self.c_mini) <= 1)
+				#self.m.addCons(quicksum(self.Rv[j,s,t] for j in self.c_mini) <= 1) # <---- this is when there are Other courses included 
+				self.m.addCons(quicksum(self.Rv[j,s,t] for j in self.C) <= 1)
 		print("\tRooms get at most one course per period")
 
 		# Double periods in the same room
@@ -775,7 +776,8 @@ class Optimizer():
 		for subject in ['Art', 'Music', 'Gym', "Resource"]:
 			rooms = self.constrained_rooms[subject]
 			sub_courses = set(self.constrained_courses[subject])
-			non_sub_courses = list(set(self.c_mini) - sub_courses) # set minus
+			#non_sub_courses = list(set(self.c_mini) - sub_courses) # set minus
+			non_sub_courses = list(set(self.C) - sub_courses) # set minus <------ when other courses included
 			# ^^ courses that cannot be in these rooms
 			for j in non_sub_courses:
 				for t in self.T:
@@ -839,6 +841,8 @@ class Optimizer():
 			elif g in [8,12]:
 				s[i] = 4
 				#print("\t4")
+			elif g in [6]:
+				s[i] = 1000
 			else:
 				s[i] = 1
 				#print("\t1")
@@ -850,11 +854,11 @@ class Optimizer():
 		# enough columns for the new RR courses
 		# for the moment mini should work, but we need to fix this
 		# where it was self.C I put mini as a temp fix
-		#mini = range(len(self.C) - 3)
+		mini = range(len(self.C) - 3)
 		self.m.setObjective(-1*quicksum(self.X[i,j] for i in self.S 
 			for j in self.other_indicies) + 
 			quicksum(s[i]*self.X[i,j]*self.P[i][j] for i in self.S 
-			for j in O.C), "maximize")
+			for j in mini), "maximize")
 
 
 		# Quick test with just 6th graders without senority
@@ -893,7 +897,8 @@ class Optimizer():
 		# get rooms
 		RoomV = {}
 		# for j in range(len(C)):
-		for j in self.c_mini:
+		#for j in self.c_mini: #<------ when there are other courses included
+		for j in self.C:
 			for s in self.R:
 				for t in self.T:
 					RoomV[j,s,t] = self.get_value(self.Rv[j,s,t])
@@ -968,7 +973,8 @@ class Optimizer():
 			print("Room" + 36*" " + "Course" + 34*" " + "Enrollment" + " "*(40 - len("Enrollment")) + "Teacher")
 			print("-"*140)
 			# for j in range(len(C)):
-			for j in self.c_mini:
+			#for j in self.c_mini: #<----- when there are other courses included
+			for j in self.C:
 				# if the course is offered
 				if self.CourseV[j,t] == 1:
 					# figure out which room
@@ -991,7 +997,8 @@ class Optimizer():
 			print("Course" + 34*" " + "Enrollment" + " "*(40 - len("Enrollment")) + "Teacher")
 			print("-"*100)
 			# for j in range(len(C)):
-			for j in self.c_mini:
+			#for j in self.c_mini:
+			for j in self.C:
 				# if the course is offered
 				if self.CourseV[j,t] == 1:
 					num_enrolled = self.get_enrollment(j)
@@ -1014,7 +1021,8 @@ class Optimizer():
 			file.write("Room" + 36*" " + "Course" + 34*" " + "Enrollment" + " "*(40 - len("Enrollment")) + "Teacher" + "\n")
 			file.write("-"*140 + "\n")
 			# for j in range(len(C)):
-			for j in self.c_mini:
+			#for j in self.c_mini:
+			for j in self.C:
 				# if the course is offered
 				if self.CourseV[j,t] == 1:
 					# figure out which room
@@ -1041,7 +1049,8 @@ class Optimizer():
 			file.write("Course" + 34*" " + "Enrollment" + " "*(40 - len("Enrollment")) + "Teacher" + "\n")
 			file.write("-"*100 + "\n")
 			# for j in range(len(C)):
-			for j in self.c_mini:
+			#for j in self.c_mini:
+			for j in self.C:
 				# if the course is offered
 				if self.CourseV[j,t] == 1:
 						num_enrolled = self.get_enrollment(j)
@@ -1051,7 +1060,7 @@ class Optimizer():
 
 
 
-	def print_student_schedule(self, student):
+	def print_student_schedule(self, student, show_score=False):
 		"""
 		takes in the index of a student and prints out their schedule
 		"""
@@ -1061,6 +1070,8 @@ class Optimizer():
 		last_name = self.student_dict[student].last_name
 		first_name = self.student_dict[student].first_name
 		print(first_name + " " + last_name + " (grade " + str(g) + ")")
+		if show_score:
+			print("Score:", self.get_score(student))
 		print("-"*85)
 		for t in self.T:
 			for j in self.Cd:
@@ -1087,7 +1098,7 @@ class Optimizer():
 					print( s1 + ((50-len(s1))*".")  + teacher)
 
 
-	def save_student_schedule(self, student, file_name):
+	def save_student_schedule(self, student, file_name, show_score=False):
 		"""
 		Takes in an index of a student, as well as the name of .txt file, 
 		and saves the student's schedule to the new text file
@@ -1101,6 +1112,8 @@ class Optimizer():
 		last_name = self.student_dict[student].last_name
 		first_name = self.student_dict[student].first_name
 		file.write(first_name + " " + last_name + " (grade " + str(g) + ")" + "\n")
+		if show_score:
+			file.write("Score: " + str(self.get_score(student)) + "\n")
 		file.write("-"*85 + "\n")
 		for t in self.T:
 			for j in self.Cd:
@@ -1135,7 +1148,7 @@ class Optimizer():
 					file.write( s1 + ((50-len(s1))*".") + teacher + "\n")
 
 
-	def print_all_student_schedules(self, rooms=True):
+	def print_all_student_schedules(self, rooms=True, show_score=False):
 		"""
 		Prints all student schedules
 
@@ -1149,7 +1162,7 @@ class Optimizer():
 					self.print_student_schedule_no_room(s)
 			print("\n\n")
 
-	def save_all_student_schedules(self, rooms = True):
+	def save_all_student_schedules(self, rooms = True, show_score=False):
 		"""
 		Saves all student schedules as text files
 		"""
@@ -1161,7 +1174,7 @@ class Optimizer():
 				if self.save_location is not None:
 					f = self.save_location + "/" +f
 				if rooms:
-					self.save_student_schedule(s, f)
+					self.save_student_schedule(s, f, show_score=show_score)
 				else:
 					self.save_student_schedule_no_rooms(s, f)
 
@@ -1237,8 +1250,10 @@ class Optimizer():
 		plt.xlabel("Score")
 		if save:
 			plt.savefig(save_loc +"/" + name, dpi=300)
+			plt.clf()
 		else:
 			plt.show()
+			plt.clf()
 
 	def plot_score_by_grade(self, name="scorce_grade.png", save=True):
 		"""
@@ -1262,8 +1277,10 @@ class Optimizer():
 		plt.title("Scores by Grade")
 		if save:
 			plt.savefig(save_loc + "/score_grade.png", dpi=400)
+			plt.clf()
 		else:
 			plt.show()
+			plt.clf()
 
 if __name__ == "__main__":
 	"""
@@ -1281,24 +1298,32 @@ if __name__ == "__main__":
 
 	#LP_input = pd.read_csv("test_LP_input.csv")
 	#LP_input = pd.read_csv("~/Desktop/test_pref/LP_input.csv") # most recent
-	LP_input = pd.read_csv("~/Desktop/test_pref/LP_Input4.csv")
+	LP_input = pd.read_csv("~/Desktop/test_pref/LP_Input4.csv") # was 4
 	#teacher = pd.read_csv("test_teacher_Df.csv") # most recent
-	teacher = pd.read_csv("~/Desktop/test_pref/Teacher_Template_filled2.csv")
-	#prefs = pd.read_csv("test_pref_input_df.csv")
-	prefs = pd.read_csv("~/Desktop/test_pref/processed_preference_data2.csv")
+	teacher = pd.read_csv("~/Desktop/test_pref/Teacher_Template_filled2.csv") # was 2
+	#prefs = pd.read_csv("test_pref_input_df.csv") 
+	prefs = pd.read_csv("~/Desktop/test_pref/processed_preference_data2.csv") # waz 2
 	#grades = pd.read_csv("OptTestFiles/grades.csv")
 	#grades = pd.DataFrame({'0':range(1,prefs.shape[0] +1), '1':10*np.ones(prefs.shape[0])})
-	prox =pd.read_csv("~/Desktop/test_pref/Proximity3.csv") # before without 2
+	prox =pd.read_csv("~/Desktop/test_pref/Proximity3.csv") # before without 2 # was 3
 
 	# Get student dictionary
-	hs_prefs = pd.read_csv("~/Desktop/test_pref/High School Form2.csv")
-	ms_prefs = pd.read_csv("~/Desktop/test_pref/Middle School form2.csv")
+	# hs_prefs = pd.read_csv("~/Desktop/test_pref/High School Form2.csv")
+	# ms_prefs = pd.read_csv("~/Desktop/test_pref/Middle School form2.csv")
+	ms_prefs = pd.read_csv("~/Desktop/test_pref/ms_response.csv")
+	hs_prefs = pd.read_csv("~/Desktop/test_pref/hs_response.csv")
+
+	# From real_data---------------------------------------------
+	LP_input = pd.read_csv("~/Desktop/test_pref/real_data/LP_Input.csv")
+	teacher = pd.read_csv("~/Desktop/test_pref/real_data/Teacher_Template_filled.csv")
+	prox =pd.read_csv("~/Desktop/test_pref/real_data/Proximity.csv")
+	prefs = pd.read_csv("~/Desktop/test_pref/real_data/processed_preference_data_index_fix.csv")
 
 
 
 
-	#student_dict = metadata(hs_prefs, ms_prefs)
-	n_6th = 10
+	student_dict = metadata(hs_prefs, ms_prefs)
+	n_6th = 1
 	student_dict, prefs = sim6(n_6th, hs_prefs, ms_prefs, prefs)
 	#prefs = pd.read_csv("with6th.csv")
 	# prefs = prefs[-1*n_6th:] # just 6th graders
@@ -1314,7 +1339,7 @@ if __name__ == "__main__":
 	r2 = Requirement(9, 'African Studies', 'Latin American Literature')
 	# mr = MiniRequirement(r)
 	
-	save_loc = "test_wed" # this should be a folder
+	save_loc = "test_index" # this should be a folder
 	O = Optimizer(prefs = prefs,
 					LP_input = LP_input,
 					teacher = teacher,
@@ -1325,8 +1350,15 @@ if __name__ == "__main__":
 					prox = prox,
 					rr_df = rr,
 					save_location = save_loc)
+
+	# load the solution with rooms
+	# at = save_loc
+	# at = "test_100/"
+	# O.XV = pickle.load(open(at+"xv.pkl", 'rb'))
+	# O.CourseV = pickle.load(open(at+"coursev.pkl", 'rb'))
+	# O.RoomV = pickle.load(open(at+"roomv.pkl", 'rb'))
 	
-	# raise SystemExit
+	#raise SystemExit
 	# re-index O.S just for the students real quick
 	#O.S = range(n_6th)
 
@@ -1341,7 +1373,7 @@ if __name__ == "__main__":
 	O.add_grade_level_requirements()
 	O.add_room_constraints()
 	O.add_rr_constraints()
-	O.add_period_constraints()
+	#O.add_period_constraints() # ONly if Other courses are in input
 	print("Constraints Added")
 
 	O.set_objective()
@@ -1356,23 +1388,23 @@ if __name__ == "__main__":
 
 
 
-	# load the solution with rooms
-	# at = save_loc
-	# O.XV = pickle.load(open(at+"xv.pkl", 'rb'))
-	# O.CourseV = pickle.load(open(at+"coursev.pkl", 'rb'))
-	# O.RoomV = pickle.load(open(at+"roomv.pkl", 'rb'))
+	
 
 	# Save soltuions
-	print("Pickling solutions")
-	pickle.dump(O.XV, open(save_loc+"/xv.pkl", 'wb'), pickle.HIGHEST_PROTOCOL)
-	pickle.dump(O.CourseV, open(save_loc+"/coursev.pkl", 'wb'), pickle.HIGHEST_PROTOCOL)
-	pickle.dump(O.RoomV, open(save_loc+"/roomv.pkl", 'wb'), pickle.HIGHEST_PROTOCOL)
-	pickle.dump(O.UV, open(save_loc+"/uv.pkl", 'wb'), pickle.HIGHEST_PROTOCOL)
+	
+	# pickle.dump(O.XV, open(save_loc+"/xv.pkl", 'wb'), pickle.HIGHEST_PROTOCOL)
+	# pickle.dump(O.CourseV, open(save_loc+"/coursev.pkl", 'wb'), pickle.HIGHEST_PROTOCOL)
+	# pickle.dump(O.RoomV, open(save_loc+"/roomv.pkl", 'wb'), pickle.HIGHEST_PROTOCOL)
+	# pickle.dump(O.UV, open(save_loc+"/uv.pkl", 'wb'), pickle.HIGHEST_PROTOCOL)
+
 
 	if not O.m.getStatus() == 'infeasible':
 		O.assign_value_dicts()
 	else:
 		print("Not feasible soltuion")
+
+	print("Pickling solutions")
+	O.save_dicts()
 	O.print_grid()
 	#O.print_grid_no_room()
 	O.print_all_student_schedules(rooms = True)
@@ -1457,7 +1489,7 @@ if __name__ == "__main__":
 # plt.xlabel("Grade")
 # plt.ylabel("Score")
 # plt.title("Scores by Grade")
-# plt.savefig(save_loc + "/score_grade.png", dpi=400)
+#plt.savefig(save_loc + "/score_grade.png", dpi=400)
 
 
 

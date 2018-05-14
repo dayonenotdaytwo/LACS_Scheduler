@@ -191,7 +191,7 @@ def sim6(num_6th, HSF, MSF, processed_pref_data):
         # email, first_name, last_name, s_id, grade
         students[s] = Student('DummyEmail'+str(s), 'DummyFName'+str(s), 'DummyLName'+str(s), 'DummyID'+str(s), 6)
     
-    pref_data.to_csv("with6th.csv")
+    #pref_data.to_csv("with6th.csv")
     return students, pref_data
 
 #sim6_students = sim6(40, "HSF_5_4.csv", "MSF_5_4.csv", "processed_preference_data.csv")

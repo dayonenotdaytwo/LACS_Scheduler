@@ -1,8 +1,8 @@
 DummyFName167 DummyLName167 (grade 6)
 -------------------------------------------------------------------------------------
-Period 1: Other...................................N/A.................Other
-Period 2: Roots Music.............................Music Room..........Dara Anissi
-Period 3: People and Literature...................U7..................Mike Levy
-Period 4: People and Literature II................U7..................
-Period 7: 6th Grade Art...........................Art.................Garry Bercow
-Period 8: MS Science (Natty Simpson)..............Sci A...............Natty Simpson
+Period 1: 7th-8th Grade Art.......................Art.................Garry Bercow
+Period 2: Other V2................................N/A.................Other
+Period 3: French A................................U7..................Aeriana Cedarstrom
+Period 4: Studio Art..............................Art.................Garry Bercow
+Period 7: Inquiry and Tools.......................U6..................Shaun Errichiello
+Period 8: Inquiry and Tools II....................U6..................

@@ -1,8 +1,8 @@
 DummyFName171 DummyLName171 (grade 6)
 -------------------------------------------------------------------------------------
-Period 1: Other...................................N/A.................Other
-Period 2: Spanish A...............................U3..................Kaile Tsapis
-Period 3: People and Literature...................U7..................Mike Levy
-Period 4: People and Literature II................U7..................
-Period 7: 6th Grade Art...........................Art.................Garry Bercow
+Period 1: 7th-8th Grade Art.......................Art.................Garry Bercow
+Period 2: People and Literature...................L4..................Mike Levy
+Period 3: People and Literature II................L4..................
+Period 4: Spanish A V2............................U4/5................Kaile Tsapis
+Period 7: Other V5................................N/A.................Other
 Period 8: Other V6................................N/A.................Other

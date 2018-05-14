@@ -1,8 +1,8 @@
 DummyFName169 DummyLName169 (grade 6)
 -------------------------------------------------------------------------------------
-Period 1: People and Literature V2................U1..................KM
-Period 2: People and Literature V2 II.............U1..................
-Period 3: Fiber Tech..............................Library.............Sarah Arnoid
-Period 4: Street Band.............................Music Room..........Dara Anissi
-Period 7: Computer Literacy.......................L4..................Mike Levy
-Period 8: Other V6................................N/A.................Other
+Period 1: 7th-8th Grade Art.......................Art.................Garry Bercow
+Period 2: MS/HS PE V2.............................Gym2................Paul Zarach
+Period 3: Other V3................................N/A.................Other
+Period 4: Other V4................................N/A.................Other
+Period 7: Inquiry and Tools.......................U6..................Shaun Errichiello
+Period 8: Inquiry and Tools II....................U6..................

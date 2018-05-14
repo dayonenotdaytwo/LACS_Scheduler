@@ -1,8 +1,8 @@
 Magnus Kira (grade 9)
 -------------------------------------------------------------------------------------
-Period 1: Discovering Geometry....................U4/5................Chris Martin
-Period 2: HS PE...................................Gym2................Paul Zarach
-Period 3: Chemistry...............................Sci B...............Sarah Brumberg
-Period 4: Latin American Literature...............U4/5................Bronwen Exter
-Period 7: Community Service Class.................U4/5................Jon Raimon
-Period 8: Intermediate Spanish....................U2..................Kaile Tsapis
+Period 1: Community Service Class.................Sci B...............Jon Raimon
+Period 2: Discovering Geometry....................Sci A...............Chris Martin
+Period 3: Latin American Literature...............Sci B...............Bronwen Exter
+Period 4: Intermediate Spanish....................U3..................Kaile Tsapis
+Period 7: HS PE...................................Gym2................Paul Zarach
+Period 8: Other V6................................N/A.................Other

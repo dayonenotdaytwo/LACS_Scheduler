@@ -1,8 +1,8 @@
 DummyFName165 DummyLName165 (grade 6)
 -------------------------------------------------------------------------------------
-Period 1: MS/HS PE................................Gym2................Jodie Binns
-Period 2: Roots Music.............................Music Room..........Dara Anissi
-Period 3: People and Literature...................U7..................Mike Levy
-Period 4: People and Literature II................U7..................
-Period 7: Computer Literacy.......................L4..................Mike Levy
-Period 8: Other V6................................N/A.................Other
+Period 1: 7th-8th Grade Art.......................Art.................Garry Bercow
+Period 2: MS/HS PE V2.............................Gym2................Paul Zarach
+Period 3: Other V3................................N/A.................Other
+Period 4: Spanish A V2............................U4/5................Kaile Tsapis
+Period 7: Inquiry and Tools.......................U6..................Shaun Errichiello
+Period 8: Inquiry and Tools II....................U6..................
