@@ -27,6 +27,8 @@ import matplotlib.pyplot as plt
 from Requirement import *
 from StudentMetadata import *
 
+from Solution import *
+
 class Optimizer():
 	"""
 	This class sets up a SCIP instance of our schedule optimization model
@@ -154,6 +156,8 @@ class Optimizer():
 		self.RoomV = {}
 		self.UV = {}
 
+		self.num_vars = 0
+		self.num_cons = 0
 
 
 		# main LP_input
@@ -191,8 +195,8 @@ class Optimizer():
 		self.m = Model()
 
 		# Quick shortening to see if it works?
-		self.S = self.S[0:30]
-		#self.S = self.S[-100:]
+		#self.S = self.S[-10:]
+		self.S = self.S[-150:]
 
 		# Add Variables
 		print("Adding Variables")
@@ -468,6 +472,7 @@ class Optimizer():
 				name = "Student " + str(i) + " in course " + str(j)
 				# X[i,j] = m.addVar(vtype=GRB.BINARY, name=name)
 				X[i,j] = self.m.addVar(vtype="B", name=name)
+				self.num_vars += 1
 		print("\tStudent/Course variable added")
 
 		# Add Course Variable
@@ -477,6 +482,7 @@ class Optimizer():
 				name = "Course " + str(j) + " in period " + str(t)
 				# Course[j,t] = m.addVar(vtype=GRB.BINARY, name=name)
 				Course[j,t] = self.m.addVar(vtype="B", name=name)
+				self.num_vars += 1
 		print("\tCourse/Period variable added")
 
 		# Create the u variable
@@ -487,6 +493,7 @@ class Optimizer():
 					name = "min " + str(i) + ", " + str(j) + ", " + str(t)
 					# U[i,j,t] = m.addVar(vtype=GRB.BINARY, name=name)
 					U[i,j,t] = self.m.addVar(vtype="B", name=name)
+					self.num_vars += 1
 		print("\tU(Student/Course/Period) variable added")
 
 		# Define r  room variable (over course j in room r durring period t)
@@ -495,12 +502,11 @@ class Optimizer():
 			if "Other" not in self.Cd[j] and "Empty" not in self.Cd[j]:
 				for s in self.R:
 					for t in self.T:
-						if j==30 and t==1 and s=="Art":
-							print("We added the var")
 						name = "Course " + str(j) + " in room " + str(s) + \
 								" durring period " + str(t)
 						# Rv[j,s,t] = m.addVar(vtype=GRB.BINARY, name=name)
 						Rv[j,s,t] = self.m.addVar(vtype="B", name=name)
+						self.num_vars += 1
 		print("\tRoom/Period Variables added")
 
 		# Save to class
@@ -522,6 +528,7 @@ class Optimizer():
 			for t in self.T:
 				# m.addConstr(quicksum(U[i,j,t] for j in C) == 1) # one course per period
 				self.m.addCons(quicksum(self.U[i,j,t] for j in self.C) == 1) # one course per period
+				self.num_cons += 1
 		print("\tOne course per period")
 
 
@@ -531,9 +538,11 @@ class Optimizer():
 			for j in self.C:
 				# m.addConstr(X[i,j] == quicksum(U[i,j,t] for t in T))
 				self.m.addCons(self.X[i,j] == quicksum(self.U[i,j,t] for t in self.T))
+				self.num_cons += 1
 				for t in self.T:
 					# m.addConstr(Course[j,t] >= U[i,j,t])
 					self.m.addCons(self.Course[j,t] >= self.U[i,j,t])
+					self.num_cons += 1
 		print("\tU set-up constraints (`and`) added")
 
 
@@ -543,6 +552,7 @@ class Optimizer():
 		"""
 		for j in range(len(self.C)):
 			self.m.addCons(quicksum(self.X[i,j] for i in self.S) <= self.MAX[j])
+			self.num_cons += 1
 		print("\tMax course capacity")
 
 
@@ -552,6 +562,7 @@ class Optimizer():
 		"""
 		for j in range(len(self.C)):
 			self.m.addCons(quicksum(self.X[i,j] for i in self.S) >= self.MIN[j])
+			self.num_cons += 1
 		print("\tMin capacity constraint")
 
 
@@ -603,6 +614,7 @@ class Optimizer():
 					# I will comment this out and try somethign else as a TEMP fix
 					self.m.addCons(quicksum(self.prox_dict[subject][j]*self.X[i,j]
 						for j in self.C) <= 2) # was == but >= might be faster
+					self.num_cons += 1
 
 					# mini = range(len(self.Cd)-3) # as there are 3 RR's
 					# self.m.addCons(quicksum(self.prox_dict[subject][j]*self.X[i,j]
@@ -624,6 +636,7 @@ class Optimizer():
 				# m.addConstr(quicksum(Course[j,t]*Ta[k][j] for j in C) <= 1)
 				if np.sum(self.Ta[k]) > 0:
 					self.m.addCons(quicksum(self.Course[j,t]*self.Ta[k][j] for j in self.C) <= 1)
+					self.num_cons += 1
 		print("\tTeacher teaches as most once per period")
 
 
@@ -639,6 +652,7 @@ class Optimizer():
 		for j in range(len(self.C)):
 			# m.addConstr(quicksum(Course[j,t] for t in T) == 1)
 			self.m.addCons(quicksum(self.Course[j,t] for t in self.T) == 1)
+			self.num_cons += 1
 		print("\tCourse taught only once")
 
 		# Double period--consecutive constraints
@@ -648,6 +662,7 @@ class Optimizer():
 					if t != 4 and t != 8:
 						# m.addConstr(Course[j,t] == Course[j+1, t+1]) # change to == from >= 
 						self.m.addCons(self.Course[j,t] == self.Course[j+1, t+1]) # change to == from >= 
+						self.num_cons += 1
 		print("\tDouble periods must be consecutive")
 
 
@@ -656,8 +671,10 @@ class Optimizer():
 			if self.Db[j] == 1:
 				# m.addConstr(Course[j,4] == 0)
 				self.m.addCons(self.Course[j,4] == 0)
+				self.num_cons += 1
 				# m.addConstr(Course[j,8] == 0)
 				self.m.addCons(self.Course[j,8] == 0)
+				self.num_cons += 1
 		print("\tDouble periods not in 4th or 8th")
 
 
@@ -667,6 +684,7 @@ class Optimizer():
 				if self.Db[j] == 1:
 					# m.addConstr(X[i,j+1] == X[i,j]) # this was >= but == is better?
 					self.m.addCons(self.X[i,j+1] == self.X[i,j]) # this was >= but == is better?
+					self.num_cons += 1
 		print("\tStudents in both parts of double")
 
 		# Multi-Instance courses (students only in one instance--at most)
@@ -675,6 +693,7 @@ class Optimizer():
 				# in at most one course of the list
 				# m.addConstr(quicksum(X[i,j] for j in course_set) <= 1)
 				self.m.addCons(quicksum(self.X[i,j] for j in course_set) <= 1)
+				self.num_cons += 1
 		print("\tStudents in at most of instance of multi-instance Course ")
 
 
@@ -716,6 +735,7 @@ class Optimizer():
 				# New way of pulling grade out of dictinary
 				if self.student_dict[i].grade == req.grade:
 					self.m.addCons(quicksum(self.X[i,j] for j in multi) == 1)
+					self.num_cons += 1
 
 
 
@@ -736,6 +756,7 @@ class Optimizer():
 					# m.addConstr(quicksum(Rv[j,s,t] for s in R) == Course[j,t])
 					self.m.addCons(quicksum(self.Rv[j,s,t] for s in self.R) 
 						== self.Course[j,t])
+					self.num_cons += 1
 		print("\tCourses get one room")
 
 
@@ -745,6 +766,7 @@ class Optimizer():
 				# m.addConstr(quicksum(Rv[j,s,t] for j in c_mini) <= 1)
 				#self.m.addCons(quicksum(self.Rv[j,s,t] for j in self.c_mini) <= 1) # <---- this is when there are Other courses included 
 				self.m.addCons(quicksum(self.Rv[j,s,t] for j in self.C) <= 1)
+				self.num_cons += 1
 		print("\tRooms get at most one course per period")
 
 		# Double periods in the same room
@@ -755,6 +777,7 @@ class Optimizer():
 						for s in self.R:
 							# m.addConstr(Rv[j,s,t] == Rv[j+1, s, t+1])
 							self.m.addCons(self.Rv[j,s,t] == self.Rv[j+1, s, t+1])
+							self.num_cons += 1
 		print("\tDouble Periods in same room")
 
 
@@ -769,6 +792,7 @@ class Optimizer():
 					# m.addConstr(quicksum(Rv[j,s,t] for s in sub_rooms) == Course[j,t])
 					self.m.addCons(quicksum(self.Rv[j,s,t] for s in sub_rooms)
 						 == self.Course[j,t])
+					self.num_cons += 1
 		print("\tCourses with subject specific room needs accomodated")
 
 		# Special rooms don't get other types of courses
@@ -783,6 +807,7 @@ class Optimizer():
 				for t in self.T:
 					for s in rooms:
 						self.m.addCons(self.Rv[j,s,t] == 0)
+						self.num_cons += 1
 		print("\tReverse subject constrained rooms enforced")
 
 	def add_rr_constraints(self):
@@ -796,9 +821,11 @@ class Optimizer():
 				if i in students:
 					# This student must be in the resource room
 					self.m.addCons(self.X[i,course] == 1)
+					self.num_cons += 1
 				else:
 					# student not allowed in resource room
 					self.m.addCons(self.X[i,course] == 0)
+					self.num_cons += 1
 
 		print("\tAdded RR constraint")
 
@@ -814,6 +841,7 @@ class Optimizer():
 		for i in range(len(self.T)):
 			# m.addConstr(Course[other_indicies[i], T[i]] == 1)
 			self.m.addCons(self.Course[self.other_indicies[i], self.T[i]] == 1)
+			self.num_cons += 1
 		print("\t`Other` courses in each period")
 
 
@@ -872,7 +900,11 @@ class Optimizer():
 		"""
 		Runs the optimization sequence
 		"""
+		print("Optimizing with", len(self.S), "students")
+		print("Saving to", self.save_location)
 		print("-"*30 + " Optimization Starting " + "-"*30)
+		print("Number of variables:", self.num_vars)
+		print("Number of constraints:", self.num_cons)
 		start_time = datetime.datetime.now()
 		print("Optimization start time:", start_time)
 		self.m.optimize()
@@ -1339,7 +1371,7 @@ if __name__ == "__main__":
 	r2 = Requirement(9, 'African Studies', 'Latin American Literature')
 	# mr = MiniRequirement(r)
 	
-	save_loc = "test_index" # this should be a folder
+	save_loc = "150_2" # this should be a folder
 	O = Optimizer(prefs = prefs,
 					LP_input = LP_input,
 					teacher = teacher,
@@ -1352,13 +1384,26 @@ if __name__ == "__main__":
 					save_location = save_loc)
 
 	# load the solution with rooms
-	# at = save_loc
-	# at = "test_100/"
-	# O.XV = pickle.load(open(at+"xv.pkl", 'rb'))
-	# O.CourseV = pickle.load(open(at+"coursev.pkl", 'rb'))
-	# O.RoomV = pickle.load(open(at+"roomv.pkl", 'rb'))
+	at = "150/"
+	#at = "test_100/"
+	O.XV = pickle.load(open(at+"xv.pkl", 'rb'))
+	O.CourseV = pickle.load(open(at+"coursev.pkl", 'rb'))
+	O.RoomV = pickle.load(open(at+"roomv.pkl", 'rb'))
+
+	S = Solution(Cd=O.Cd, 
+				C= O.C,
+				XV = O.XV,
+				CourseV = O.CourseV,
+				RoomV = O.RoomV,
+				student_dict = O.student_dict,
+				I_C_dict = O.I_C_dict,
+				Ta = O.Ta,
+				R = O.R,
+				m = O.m,
+				save_loc = "test_sol/150_sol.pkl")
+	S.save()
 	
-	#raise SystemExit
+	raise SystemExit
 	# re-index O.S just for the students real quick
 	#O.S = range(n_6th)
 
@@ -1398,24 +1443,37 @@ if __name__ == "__main__":
 	# pickle.dump(O.UV, open(save_loc+"/uv.pkl", 'wb'), pickle.HIGHEST_PROTOCOL)
 
 
-	if not O.m.getStatus() == 'infeasible':
+	if not O.m.getStatus() != 'infeasible':
 		O.assign_value_dicts()
 	else:
 		print("Not feasible soltuion")
 
 	print("Pickling solutions")
-	O.save_dicts()
+	#O.save_dicts()
 	O.print_grid()
 	#O.print_grid_no_room()
 	O.print_all_student_schedules(rooms = True)
 	O.diagnostic()
 
 	#O.save_grid_no_rooms("test_grid_no_rooms.txt")
-	O.save_grid()
-	O.save_all_student_schedules(rooms=True)
+	#O.save_grid()
+	#O.save_all_student_schedules(rooms=True, show_score=True)
 
-	O.make_hist(save=False)
-	O.plot_score_by_grade(save=False)
+	#O.make_hist(save=True)
+	#O.plot_score_by_grade(save=True)
+
+	# test solution
+	S = Solution(Cd=O.Cd, 
+				C= O.C,
+				XV = O.XV,
+				CourseV = O.CourseV,
+				RoomV = O.RoomV,
+				student_dict = O.student_dict,
+				I_C_dict = O.I_C_dict,
+				Ta = O.Ta,
+				R = O.R,
+				m = O.m,
+				save_loc = "test_sol/solution.pkl")
 
 
 	# for i in O.S:

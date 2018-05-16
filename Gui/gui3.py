@@ -437,78 +437,81 @@ class MainApplication(tk.Frame):
 		course_list.append("missing")
 
 
-        hs_response = hs_response.fillna('missing')
-        ms_response = ms_response.fillna('missing')
-        hs_response = hs_response.drop( 'IIC Mathematics []', axis = 1)
+		hs_response = hs_response.fillna('missing')
+		ms_response = ms_response.fillna('missing')
+		# try:
+		# 	hs_response = hs_response.drop( 'IIC Mathematics []', axis = 1)
+		# except:
+		# 	pass
 
-        change_dict = {"HS English TBA": "Non-Western Writers",
-                 'Intermediate Algebra and Geometry': "Discovering Geometry",
-                 'Beginning Algebra and Geometry': "Discovering Algebra",
-                 'Advanced/In-Depth French': "Advanced French",
-                 'Social Studies (BE)': "Governance and Dissent"}
+		change_dict = {"HS English TBA": "Non-Western Writers",
+				 'Intermediate Algebra and Geometry': "Discovering Geometry",
+				 'Beginning Algebra and Geometry': "Discovering Algebra",
+				 'Advanced/In-Depth French': "Advanced French",
+				 'Social Studies (BE)': "Governance and Dissent"}
 
-        for val in change_dict:
-            hs_response.replace(val, change_dict[val], inplace=True)
-            ms_response.replace(val, change_dict[val], inplace=True)
+		for val in change_dict:
+			hs_response.replace(val, change_dict[val], inplace=True)
+			ms_response.replace(val, change_dict[val], inplace=True)
 
-        hs_data = hs_response.iloc[:, 5:-10]
-        ms_data = ms_response.iloc[:, 5:-10]
+		hs_data = hs_response.iloc[:, 5:-10]
+		ms_data = ms_response.iloc[:, 5:-10]
 
-        # extract preference levels from the column names
+		# extract preference levels from the column names
 
-        temp_list = hs_response.columns[5:-10]
-        temp_list2 = ms_response.columns[5:-10]
+		temp_list = hs_response.columns[5:-10]
+		temp_list2 = ms_response.columns[5:-10]
 
-        # extracted choice numbers from the column names 
-        hs_choices = []
-        ms_choices = []
+		# extracted choice numbers from the column names 
+		hs_choices = []
+		ms_choices = []
 
-        for item in temp_list:
-            hs_choices.append(int(item[-2]))
+		for item in temp_list:
+			hs_choices.append(int(item[-2]))
 
-        for item in temp_list2:
-            ms_choices.append(int(item[-2]))
+		for item in temp_list2:
+			ms_choices.append(int(item[-2]))
 
-        # cares only about the first instance of a course in the choice list
-        def missing_and_duplicated(x):
-            missing = x != 'missing'
-            duplicated = x.duplicated()
-            missanddup = np.hstack((missing.values.reshape(-1,1), duplicated.values.reshape(-1,1)))
-            ind = missanddup.all(axis = 1)
-            x[ind] = 'missing'
-            return None
+		# cares only about the first instance of a course in the choice list
+		def missing_and_duplicated(x):
+			missing = x != 'missing'
+			duplicated = x.duplicated()
+			missanddup = np.hstack((missing.values.reshape(-1,1), duplicated.values.reshape(-1,1)))
+			ind = missanddup.all(axis = 1)
+			x[ind] = 'missing'
+			return None
 
-        for i in range(hs_data.shape[0]):
-            missing_and_duplicated(hs_data.iloc[i,:])
+		for i in range(hs_data.shape[0]):
+			missing_and_duplicated(hs_data.iloc[i,:])
 
-        for i in range(ms_data.shape[0]):
-            missing_and_duplicated(ms_data.iloc[i,:])
+		for i in range(ms_data.shape[0]):
+			missing_and_duplicated(ms_data.iloc[i,:])
 
-        # helper function which returns the corresponding indices in course_list for each row of responses
-        def course_index(input_array):
-            indices = []
-            for item in input_array:
-                indices.append(course_list.index(item))
-            return np.array(indices)
-    
-        result = pd.DataFrame(0,columns = course_list, index = range(hs_data.shape[0]+ms_data.shape[0]))
+		# helper function which returns the corresponding indices in course_list for each row of responses
+		def course_index(input_array):
+			indices = []
+			for item in input_array:
+				indices.append(course_list.index(item))
+			return np.array(indices)
+	
+		result = pd.DataFrame(0,columns = course_list, index = range(hs_data.shape[0]+ms_data.shape[0]))
 
-        for i in range(hs_data.shape[0]):
-            # assign hs_choices values to the corresponding indices in the result data
-            result.iloc[i,course_index(hs_data.iloc[i,:])] = hs_choices
+		for i in range(hs_data.shape[0]):
+			# assign hs_choices values to the corresponding indices in the result data
+			result.iloc[i,course_index(hs_data.iloc[i,:])] = hs_choices
 
-        ms_start_index = hs_data.shape[0]
+		ms_start_index = hs_data.shape[0]
 
-        for i in range(ms_data.shape[0]):
-            # assign middle school choices. Row index is num_rows of hs_data + i
-            # (so MS rows would be after HS rows in result)
-            result.iloc[(ms_start_index + i),course_index(ms_data.iloc[i,:])] = ms_choices
+		for i in range(ms_data.shape[0]):
+			# assign middle school choices. Row index is num_rows of hs_data + i
+			# (so MS rows would be after HS rows in result)
+			result.iloc[(ms_start_index + i),course_index(ms_data.iloc[i,:])] = ms_choices
 
-        result['RR1'] = np.zeros(shape=result.shape[0],dtype=np.int32)
-        result['RR2'] = np.zeros(shape=result.shape[0],dtype=np.int32)
-        result['RR3'] = np.zeros(shape=result.shape[0],dtype=np.int32)
+		result['RR1'] = np.zeros(shape=result.shape[0],dtype=np.int32)
+		result['RR2'] = np.zeros(shape=result.shape[0],dtype=np.int32)
+		result['RR3'] = np.zeros(shape=result.shape[0],dtype=np.int32)
 
-        result = result.drop('missing', axis = 1)
+		result = result.drop('missing', axis = 1)
 
 		self.preference_input_df = result
 		self.preference_input_df.to_csv("~Desktop/test_pref/read_data/test_pref_out.csv")
@@ -648,11 +651,9 @@ class MainApplication(tk.Frame):
 		Sets the direcotry where the optimization output will be saved
 		"""
 		#dir = askdirectory()
-		s = "Select the location where you would like the output to be saved.\n\n"
-		s += "A folder with the name specified will be created in this location"
-		s += "\n\n**DO NOT put a file extension in your input**"
+		s = "Select the location where you would like the output to be saved."
 		messagebox.showinfo("Note", s)
-		directory = asksaveasfilename()
+		directory = askdirectory()
 		self.optimization_output_directory = directory
 
 
@@ -664,29 +665,29 @@ class MainApplication(tk.Frame):
 		print("Put your function here")
 		"""
 
-		still_needed = []
-		# Verify the required information
-		if self.preference_input_df is None:
-			still_needed.append("Preferences")
-		# else:
-		# 	# save it down for optimizer debugging
-		# 	self.preference_input_df.to_csv("OptTestFiles/prefs2.csv")
-		if self.LP_input is None:
-			still_needed.append("LP_input")
-		# else:
-		# 	self.LP_input.to_csv("OptTestFiles/LP_input2.csv")
-		if self.teacher_df is None:
-			still_needed.append("Teacher File (secondary)")
-		# else:
-		# 	self.teacher_df.to_csv("OptTestFiles/teacher2.csv")
-		# if self.optimization_output_directory is None:
-		# 	still_needed.append("Save location for optimization")
+		# still_needed = []
+		# # Verify the required information
+		# if self.preference_input_df is None:
+		# 	still_needed.append("Preferences")
+		# # else:
+		# # 	# save it down for optimizer debugging
+		# # 	self.preference_input_df.to_csv("OptTestFiles/prefs2.csv")
+		# if self.LP_input is None:
+		# 	still_needed.append("LP_input")
+		# # else:
+		# # 	self.LP_input.to_csv("OptTestFiles/LP_input2.csv")
+		# if self.teacher_df is None:
+		# 	still_needed.append("Teacher File (secondary)")
+		# # else:
+		# # 	self.teacher_df.to_csv("OptTestFiles/teacher2.csv")
+		# # if self.optimization_output_directory is None:
+		# # 	still_needed.append("Save location for optimization")
 
-		s = ""
-		if len(still_needed) > 0:
-			s = str(still_needed)
-			messagebox.showerror("Error", "You are missing the following\n\n" + s)
-			return 
+		# s = ""
+		# if len(still_needed) > 0:
+		# 	s = str(still_needed)
+		# 	messagebox.showerror("Error", "You are missing the following\n\n" + s)
+		# 	return 
 
 		# Get GAP value from slider
 		GAP = self.slider.get()
@@ -695,7 +696,7 @@ class MainApplication(tk.Frame):
 		# THIS CALL NEEDS TO BE FIXED; MAKE SURE EVERYTHING IN RIGHT SPOT
 
 		# Temp of grade file, this should eventually come from the form
-		grades = pd.DataFrame({'0':[1,2], '1':[8,9]})
+		# grades = pd.DataFrame({'0':[1,2], '1':[8,9]})
 
 		# # for debugging, output all the files you are sending
 		# self.preference_input_df.to_csv("test_pref_input_df.csv")
@@ -733,8 +734,8 @@ class MainApplication(tk.Frame):
 		O.add_course_constraints()
 		O.add_grade_level_requirements()
 		O.add_room_constraints()
-		O.add_period_constraints()
-		O.add_room_constraints()
+		O.add_rr_constraints()
+		#O.add_period_constraints() # ONly if Other courses are in input
 		print("Constraints Added")
 
 		O.set_objective()
@@ -743,19 +744,47 @@ class MainApplication(tk.Frame):
 
 		O.assign_value_dicts()
 
-		sol = Solution(Cd = O.Cd,
-			C = O.C,
-			XV = O.XV,
-			CourseV = O.CourseV,
-			RV = O.RV,
-			student_dict = O.student_dict,
-			I_C_dict = O.I_C_dict,
-			Ta = O.Ta,
-			R = O.R,
-			m = O.m)
+		# Save solution object
+		try:
+			S = Solution(Cd=O.Cd, 
+					C= O.C,
+					XV = O.XV,
+					CourseV = O.CourseV,
+					RoomV = O.RoomV,
+					student_dict = O.student_dict,
+					I_C_dict = O.I_C_dict,
+					Ta = O.Ta,
+					R = O.R,
+					m = O.m,
+					save_loc = self.optimization_output_directory + "/solution.pkl")
+			S.save()
+			except:
+				print("save to solution object failed")
 
 		O.print_grid()
 		O.print_all_student_schedules()
+
+		if not O.m.getStatus() != 'infeasible':
+			O.assign_value_dicts()
+		else:
+			print("Not feasible soltuion")
+			s = "Could not find a solution, please tweak files and try again"
+			messagebox.showinfo("Note", s)
+			raise SystemExit
+
+
+		print("Pickling solutions")
+		O.save_dicts()
+		O.print_grid()
+		#O.print_grid_no_room()
+		O.print_all_student_schedules(rooms = True)
+
+		#O.save_grid_no_rooms("test_grid_no_rooms.txt")
+		O.save_grid()
+		O.save_all_student_schedules(rooms=True, show_score=True)
+
+		O.make_hist(save=True)
+		O.plot_score_by_grade(save=True)
 		O.diagnostic()
 
 
