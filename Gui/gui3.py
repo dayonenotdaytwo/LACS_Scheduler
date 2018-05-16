@@ -427,7 +427,8 @@ class MainApplication(tk.Frame):
 		# the index should be the list of courses + the V2 courses.
 		# course_list = pd.DataFrame.from_csv("LP_Input.csv")
 		# course_list = list(course_list.index)
-		course_list = list(self.LP_input["Course Name"])
+		course_list = list(self.LP_input.index)
+
 
 		# hs_response = pd.DataFrame.from_csv("School form - High School form responses.csv")
 		# ms_response = pd.DataFrame.from_csv("School form - Middle School form responses.csv")
@@ -764,7 +765,7 @@ class MainApplication(tk.Frame):
 		O.print_grid()
 		O.print_all_student_schedules()
 
-		if not O.m.getStatus() == 'infeasible':
+		if not O.m.getStatus() != 'infeasible':
 			O.assign_value_dicts()
 		else:
 			print("Not feasible soltuion")
