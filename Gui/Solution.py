@@ -30,7 +30,7 @@ class Solution():
 	"""
 
 	def __init__(self, Cd, C, XV, CourseV,
-			RV, student_dict, I_C_dict, Ta, R, m, save_loc):
+			RoomV, student_dict, I_C_dict, Ta, R, m, save_loc):
 		"""
 
 		Parameters
@@ -58,20 +58,20 @@ class Solution():
 		self.C = C
 		self.XV = XV
 		self.CourseV = CourseV
-		self.RV = RV
+		self.RoomV = RoomV
 		self.student_dict = student_dict
 		self.I_C_dict = I_C_dict
 		self.Ta = Ta
 		self.R = R
-		self.m = m
+		#self.m = m
 		self.save_loc = save_loc
 
 		# Get values in dictinary
 		# first get list of courses that are not other:
-		self.c_mini = []
-		for j in self.Cd:
-			if "Other" not in self.Cd[j] and "Empty" not in self.Cd[j]:
-				c_mini.append(j)
+		# self.c_mini = []
+		# for j in self.Cd:
+		# 	if "Other" not in self.Cd[j] and "Empty" not in self.Cd[j]:
+		# 		c_mini.append(j)
 
 
 
@@ -80,7 +80,7 @@ class Solution():
 		"""
 		Pickles the soltuions and saves it to the save location
 		"""
-		pickle.dump(self, open(save_loc, "wb"), pickle.HIGHEST_PROTOCOL)
+		pickle.dump(self, open(self.save_loc, "wb"), pickle.HIGHEST_PROTOCOL)
 		print("Save compelted")
 
 
@@ -93,7 +93,13 @@ class Solution():
 		# copy them over here, and add a few more save methods
 		# Then add a results frame to the GUI
 
-
+def open_sol(file):
+	"""
+	takes in the path to a pickled solution file
+	returns the solution object
+	"""
+	S = pickle.load(open(file, "rb"))
+	return S
 
 
 
