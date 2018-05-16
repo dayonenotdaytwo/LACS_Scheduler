@@ -758,13 +758,13 @@ class MainApplication(tk.Frame):
 					m = O.m,
 					save_loc = self.optimization_output_directory + "/solution.pkl")
 			S.save()
-			except:
-				print("save to solution object failed")
+		except:
+			print("save to solution object failed")
 
 		O.print_grid()
 		O.print_all_student_schedules()
 
-		if not O.m.getStatus() != 'infeasible':
+		if not O.m.getStatus() == 'infeasible':
 			O.assign_value_dicts()
 		else:
 			print("Not feasible soltuion")

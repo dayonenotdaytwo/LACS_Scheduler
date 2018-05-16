@@ -1,0 +1,9 @@
+colon alejandra (grade 10.0)
+Score: 10
+-------------------------------------------------------------------------------------
+Period 1: Computer Science........................Sci C...............Natty Simpson
+Period 2: HS PE...................................Gym.................Paul Zarach
+Period 3: Asia Studies............................L2..................Michael Nardy
+Period 4: French B................................Sci C...............Aeriana Cedarstrom
+Period 7: Discovering Geometry....................L3..................Chris Martin
+Period 8: Studio Art..............................Art.................Garry Bercow

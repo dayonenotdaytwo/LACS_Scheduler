@@ -1443,7 +1443,7 @@ if __name__ == "__main__":
 	# pickle.dump(O.UV, open(save_loc+"/uv.pkl", 'wb'), pickle.HIGHEST_PROTOCOL)
 
 
-	if not O.m.getStatus() != 'infeasible':
+	if not O.m.getStatus() == 'infeasible':
 		O.assign_value_dicts()
 	else:
 		print("Not feasible soltuion")
