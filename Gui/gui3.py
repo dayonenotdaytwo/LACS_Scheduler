@@ -16,7 +16,7 @@ import pandas as pd
 from Requirement import *
 from Popup import *
 from MenuBar import *
-from Optimizer import *
+#from Optimizer import *
 from StudentMetadata import *
 from Solution import *
 
