@@ -427,7 +427,7 @@ class MainApplication(tk.Frame):
 		# the index should be the list of courses + the V2 courses.
 		# course_list = pd.DataFrame.from_csv("LP_Input.csv")
 		# course_list = list(course_list.index)
-		course_list = list(self.LP_input.index)
+		course_list = list(self.LP_input['Course Name'])
 
 
 		# hs_response = pd.DataFrame.from_csv("School form - High School form responses.csv")
