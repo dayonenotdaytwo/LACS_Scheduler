@@ -274,7 +274,13 @@ class Optimizer():
 
 		# Extract Preferences
 		#self.P = self.prefs.drop("Student", axis=1).as_matrix()
-		self.P = self.prefs.drop("Student", axis=1).as_matrix()
+		try:
+			self.P = self.prefs.drop("Student", axis=1).as_matrix()
+		except:
+			print("there is no Student column")
+			print("The columns are:", self.prefs.columns)
+			print("Moving on")
+			self.P = self.prefs.as_matrix()
 		self.P[self.P==1] = 4
 		self.P[self.P==3] = 1
 		self.P[self.P==4] = 3
@@ -315,6 +321,7 @@ class Optimizer():
 			self.RR_course_indicies[name] = list(self.Cd.values()).index(name)
 
 		# Make the RR_dict from the rr_df
+		print("The student dictionary has length:", len(self.student_dict))
 		self.RR_student_dict = {}
 		for name in ["RR1", "RR2", "RR3"]:
 			l = list(self.rr_df[name])
@@ -326,9 +333,12 @@ class Optimizer():
 					l2.append(v)
 			#print(v)
 
+
 			for i in l2:
 				#where i is a student ID
+				print("trying to find student id", i)
 				for s in self.S:
+					print("working on student ind:", s)
 					if not np.isnan(self.student_dict[s].s_id):
 						if int(self.student_dict[s].s_id) == int(i):
 							ind_list.append(s)
@@ -875,6 +885,12 @@ class Optimizer():
 				s[i] = 1
 				#print("\t1")
 		#print(s)
+
+		# Make a copy of the preference matrix that puts all the zeros 
+		# with -10's
+		P2 = self.P.copy()
+		P2[P2==0] = -10
+
 		#-------------------------------------------------------
 		#						Fix This!!
 		#-------------------------------------------------------
@@ -885,7 +901,7 @@ class Optimizer():
 		mini = range(len(self.C) - 3)
 		self.m.setObjective(-1*quicksum(self.X[i,j] for i in self.S 
 			for j in self.other_indicies) + 
-			quicksum(s[i]*self.X[i,j]*self.P[i][j] for i in self.S 
+			quicksum(s[i]*self.X[i,j]*P2[i][j] for i in self.S 
 			for j in mini), "maximize")
 
 
@@ -1371,7 +1387,7 @@ if __name__ == "__main__":
 	r2 = Requirement(9, 'African Studies', 'Latin American Literature')
 	# mr = MiniRequirement(r)
 	
-	save_loc = "150_2" # this should be a folder
+	save_loc = "150_newpref" # this should be a folder
 	O = Optimizer(prefs = prefs,
 					LP_input = LP_input,
 					teacher = teacher,
@@ -1384,26 +1400,15 @@ if __name__ == "__main__":
 					save_location = save_loc)
 
 	# load the solution with rooms
-	at = "150/"
+	#at = "150/"
 	#at = "test_100/"
-	O.XV = pickle.load(open(at+"xv.pkl", 'rb'))
-	O.CourseV = pickle.load(open(at+"coursev.pkl", 'rb'))
-	O.RoomV = pickle.load(open(at+"roomv.pkl", 'rb'))
+	# O.XV = pickle.load(open(at+"xv.pkl", 'rb'))
+	# O.CourseV = pickle.load(open(at+"coursev.pkl", 'rb'))
+	# O.RoomV = pickle.load(open(at+"roomv.pkl", 'rb'))
 
-	S = Solution(Cd=O.Cd, 
-				C= O.C,
-				XV = O.XV,
-				CourseV = O.CourseV,
-				RoomV = O.RoomV,
-				student_dict = O.student_dict,
-				I_C_dict = O.I_C_dict,
-				Ta = O.Ta,
-				R = O.R,
-				m = O.m,
-				save_loc = "test_sol/150_sol.pkl")
-	S.save()
+
 	
-	raise SystemExit
+	#raise SystemExit
 	# re-index O.S just for the students real quick
 	#O.S = range(n_6th)
 
@@ -1449,18 +1454,18 @@ if __name__ == "__main__":
 		print("Not feasible soltuion")
 
 	print("Pickling solutions")
-	#O.save_dicts()
+	O.save_dicts()
 	O.print_grid()
 	#O.print_grid_no_room()
 	O.print_all_student_schedules(rooms = True)
 	O.diagnostic()
 
 	#O.save_grid_no_rooms("test_grid_no_rooms.txt")
-	#O.save_grid()
-	#O.save_all_student_schedules(rooms=True, show_score=True)
+	O.save_grid()
+	O.save_all_student_schedules(rooms=True, show_score=True)
 
-	#O.make_hist(save=True)
-	#O.plot_score_by_grade(save=True)
+	O.make_hist(save=True)
+	O.plot_score_by_grade(save=True)
 
 	# test solution
 	S = Solution(Cd=O.Cd, 
@@ -1473,7 +1478,8 @@ if __name__ == "__main__":
 				Ta = O.Ta,
 				R = O.R,
 				m = O.m,
-				save_loc = "test_sol/solution.pkl")
+				save_loc = "150_newpref/solution.pkl")
+	S.save()
 
 
 	# for i in O.S:

@@ -16,7 +16,7 @@ import pandas as pd
 from Requirement import *
 from Popup import *
 from MenuBar import *
-#from Optimizer import *
+from Optimizer import *
 from StudentMetadata import *
 from Solution import *
 
@@ -387,13 +387,15 @@ class MainApplication(tk.Frame):
 		self.ms_preference_df = pd.DataFrame.from_csv(file)
 
 		if self.hs_preference_df is not None:
-			self.combine_prefs()
 			# From the new data addition
 			self.student_dict = metadata(self.hs_preference_df,
 									 self.ms_preference_df)
-			self.need_course_num_dict = num_courses(self.LP_input,
+			print("student dictionary created")
+			self.need_course_num_dict = get_num_courses(self.LP_input,
 													self.hs_preference_df,
 													self.ms_preference_df)
+			print("num courses dict created")
+			self.combine_prefs()
 
 
 	def get_hs_preference_file(self):
@@ -409,13 +411,16 @@ class MainApplication(tk.Frame):
 		self.hs_preference_df = pd.DataFrame.from_csv(file)
 
 		if self.ms_preference_df is not None:
-			self.combine_prefs()
 			# from the new data addition
 			self.student_dict = metadata(self.hs_preference_df,
 									 self.ms_preference_df)
-			self.need_course_num_dict = num_courses(self.LP_input,
+			print(self.student_dict)
+			print("student dictionary created")
+			self.need_course_num_dict = get_num_courses(self.LP_input,
 													self.hs_preference_df,
 													self.ms_preference_df)
+			print("num courses dict created")
+			self.combine_prefs()
 
 
 	def combine_prefs(self):
@@ -440,10 +445,12 @@ class MainApplication(tk.Frame):
 
 		hs_response = hs_response.fillna('missing')
 		ms_response = ms_response.fillna('missing')
-		# try:
-		# 	hs_response = hs_response.drop( 'IIC Mathematics []', axis = 1)
-		# except:
-		# 	pass
+		try:
+			print("\n\nTRYING")
+			hs_response = hs_response.drop('IIC Mathematics []', axis = 1)
+		except:
+			print("in except")
+			pass
 
 		change_dict = {"HS English TBA": "Non-Western Writers",
 				 'Intermediate Algebra and Geometry': "Discovering Geometry",
@@ -468,6 +475,7 @@ class MainApplication(tk.Frame):
 		ms_choices = []
 
 		for item in temp_list:
+			print(item)
 			hs_choices.append(int(item[-2]))
 
 		for item in temp_list2:
@@ -515,7 +523,7 @@ class MainApplication(tk.Frame):
 		result = result.drop('missing', axis = 1)
 
 		self.preference_input_df = result
-		self.preference_input_df.to_csv("~Desktop/test_pref/read_data/test_pref_out.csv")
+		#self.preference_input_df.to_csv("~Desktop/test_pref/read_data/test_pref_out.csv")
 		print(self.preference_input_df)
 
 

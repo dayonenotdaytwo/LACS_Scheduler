@@ -108,8 +108,8 @@ def create_LP_input(full_course_info, original_course_input):
 	all_info[all_info_obj.columns] = all_info_obj.apply(lambda x: x.str.strip())
 
 	#all_info.to_csv(file_location + '/LP_Input.csv', index=False)
-	print("\n\n\nThis is what would be saved as LP Input:")
-	print(all_info)
+	#print("\n\n\nThis is what would be saved as LP Input:")
+	#print(all_info)
 
 	return all_info
 
