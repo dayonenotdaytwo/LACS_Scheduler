@@ -96,11 +96,16 @@ class MenuBar():
 		self.parent.ms_preference_df = s.ms_preference_df
 		self.parent.rr_df = s.rr_df
 		self.parent.student_dict = s.student_dict
+		self.parent.need_course_num_dict = s.need_course_num_dict
 
-		for r in s.requirements:
-			full_req = r.create_full()
-			full_req.create_label(self.parent.req_frame_lower)
-			self.parent.requirements.append(full_req)
+		if s.requirements is not None:
+			# Check if there were any requirements
+			# If so, open them, make full versions
+			# add them to the list
+			for r in s.requirements:
+				full_req = r.create_full()
+				full_req.create_label(self.parent.req_frame_lower)
+				self.parent.requirements.append(full_req)
 
 
 
@@ -125,7 +130,8 @@ class MenuBar():
 				hs_preference_df = self.parent.hs_preference_df,
 				ms_preference_df = self.parent.ms_preference_df,
 				rr_df = self.parent.rr_df,
-				student_dict = self.parent.student_dict)
+				student_dict = self.parent.student_dict,
+				need_course_num_dict = self.parent.need_course_num_dict)
 		s.save(file_name)
 		print("Save successful")
 

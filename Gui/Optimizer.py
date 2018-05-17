@@ -196,7 +196,7 @@ class Optimizer():
 
 		# Quick shortening to see if it works?
 		#self.S = self.S[-10:]
-		self.S = self.S[-150:]
+		#self.S = self.S[-140:]
 
 		# Add Variables
 		print("Adding Variables")
@@ -277,9 +277,9 @@ class Optimizer():
 		try:
 			self.P = self.prefs.drop("Student", axis=1).as_matrix()
 		except:
-			print("there is no Student column")
-			print("The columns are:", self.prefs.columns)
-			print("Moving on")
+			# print("there is no Student column")
+			# print("The columns are:", self.prefs.columns)
+			# print("Moving on")
 			self.P = self.prefs.as_matrix()
 		self.P[self.P==1] = 4
 		self.P[self.P==3] = 1
@@ -336,9 +336,9 @@ class Optimizer():
 
 			for i in l2:
 				#where i is a student ID
-				print("trying to find student id", i)
+				#print("trying to find student id", i)
 				for s in self.S:
-					print("working on student ind:", s)
+					#print("working on student ind:", s)
 					if not np.isnan(self.student_dict[s].s_id):
 						if int(self.student_dict[s].s_id) == int(i):
 							ind_list.append(s)
@@ -622,9 +622,12 @@ class Optimizer():
 					#------------------------------------------------------
 					# This is pissy as prox not updated for new RR courses
 					# I will comment this out and try somethign else as a TEMP fix
-					self.m.addCons(quicksum(self.prox_dict[subject][j]*self.X[i,j]
-						for j in self.C) <= 2) # was == but >= might be faster
-					self.num_cons += 1
+					try:
+						self.m.addCons(quicksum(self.prox_dict[subject][j]*self.X[i,j]
+							for j in self.C) <= 2) # was == but >= might be faster
+						self.num_cons += 1
+					except:
+						pass
 
 					# mini = range(len(self.Cd)-3) # as there are 3 RR's
 					# self.m.addCons(quicksum(self.prox_dict[subject][j]*self.X[i,j]
@@ -889,7 +892,11 @@ class Optimizer():
 		# Make a copy of the preference matrix that puts all the zeros 
 		# with -10's
 		P2 = self.P.copy()
-		P2[P2==0] = -10
+		P2[P2==1] = 3
+		P2[P2==2] = 4
+		P2[P2==3] = 5
+		self.Ptest = P2
+		print(P2)
 
 		#-------------------------------------------------------
 		#						Fix This!!
@@ -1203,6 +1210,7 @@ class Optimizer():
 		rooms - Boolean, indicates if the model was run with or without rooms
 		"""
 		for s in self.S:
+			print("student", s, "grade", self.student_dict[s].grade, "is type", type(self.student_dict[s].grade))
 			if not np.isnan(self.student_dict[s].grade):
 				if rooms:
 					self.print_student_schedule(s)
@@ -1297,7 +1305,7 @@ class Optimizer():
 		plt.title("Histogram of Student Scores")
 		plt.xlabel("Score")
 		if save:
-			plt.savefig(save_loc +"/" + name, dpi=300)
+			plt.savefig(self.save_location +"/" + name, dpi=300)
 			plt.clf()
 		else:
 			plt.show()
@@ -1324,7 +1332,7 @@ class Optimizer():
 		plt.ylabel("Score")
 		plt.title("Scores by Grade")
 		if save:
-			plt.savefig(save_loc + "/score_grade.png", dpi=400)
+			plt.savefig(self.save_location + "/score_grade.png", dpi=400)
 			plt.clf()
 		else:
 			plt.show()
@@ -1387,7 +1395,7 @@ if __name__ == "__main__":
 	r2 = Requirement(9, 'African Studies', 'Latin American Literature')
 	# mr = MiniRequirement(r)
 	
-	save_loc = "150_newpref" # this should be a folder
+	save_loc = "~/Desktop/gui_test" # this should be a folder
 	O = Optimizer(prefs = prefs,
 					LP_input = LP_input,
 					teacher = teacher,
@@ -1408,7 +1416,7 @@ if __name__ == "__main__":
 
 
 	
-	#raise SystemExit
+	
 	# re-index O.S just for the students real quick
 	#O.S = range(n_6th)
 
@@ -1427,7 +1435,7 @@ if __name__ == "__main__":
 	print("Constraints Added")
 
 	O.set_objective()
-
+	#raise SystemExit	
 	
 	#--------------------
 	#--------------------
@@ -1435,7 +1443,7 @@ if __name__ == "__main__":
 	#--------------------
 	#--------------------
 
-
+	raise SystemExit
 
 
 	

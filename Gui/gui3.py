@@ -276,6 +276,8 @@ class MainApplication(tk.Frame):
 			text = "  " + self.get_file_name(initial_file_name)
 			).grid(row=1, column=3)
 
+		print("Initial file succesfully saved")
+
 	def get_file_name(self, file):
 		"""
 		Returns the name of the file after the last /
@@ -319,6 +321,8 @@ class MainApplication(tk.Frame):
 		# self.LP_input.to_csv("LP_Input.csv")
 		# print(self.LP_input)
 		# print(dir_name)
+
+		print("teacher file succesfully saved")
 		
 
 	def get_teacher_file(self):
@@ -334,8 +338,13 @@ class MainApplication(tk.Frame):
 			row = 3, column=3, sticky="W")
 		self.teacher_df = pd.read_csv(teacher_file_name) # there is a header
 
+		print("Completed teacher file succesfully uploaded")
+
 
 	def make_preference_form(self):
+		"""
+		Depricated
+		"""
 		s = "Select where you would lieke the file saved."
 		s+= "A file title 'google_form_input.csv' will be saved"
 		messagebox.showinfo("Alert", s)
@@ -385,6 +394,7 @@ class MainApplication(tk.Frame):
 			).grid(row=5, column=3, sticky="W")
 		# self.ms_preference_df = pd.read_csv(file)
 		self.ms_preference_df = pd.DataFrame.from_csv(file)
+		print("Middle school file succesfully uploaded")
 
 		if self.hs_preference_df is not None:
 			# From the new data addition
@@ -396,6 +406,7 @@ class MainApplication(tk.Frame):
 													self.ms_preference_df)
 			print("num courses dict created")
 			self.combine_prefs()
+			print("Preference combined")
 
 
 	def get_hs_preference_file(self):
@@ -409,9 +420,12 @@ class MainApplication(tk.Frame):
 			text = " " + self.get_file_name(file)
 			).grid(row=6, column=3, sticky="W")
 		self.hs_preference_df = pd.DataFrame.from_csv(file)
+		print("Highschool file succesfully upladed")
 
 		if self.ms_preference_df is not None:
 			# from the new data addition
+			print("Middle school columns:", print(self.ms_preference_df.columns))
+			print("High school columns:", print(self.hs_preference_df.columns))
 			self.student_dict = metadata(self.hs_preference_df,
 									 self.ms_preference_df)
 			print(self.student_dict)
@@ -419,8 +433,10 @@ class MainApplication(tk.Frame):
 			self.need_course_num_dict = get_num_courses(self.LP_input,
 													self.hs_preference_df,
 													self.ms_preference_df)
+			#print(self.need_course_num_dict)
 			print("num courses dict created")
 			self.combine_prefs()
+			print("Preferences combined")
 
 
 	def combine_prefs(self):
@@ -524,7 +540,7 @@ class MainApplication(tk.Frame):
 
 		self.preference_input_df = result
 		#self.preference_input_df.to_csv("~Desktop/test_pref/read_data/test_pref_out.csv")
-		print(self.preference_input_df)
+		#print(self.preference_input_df)
 
 
 	def get_rr_list(self):
@@ -536,6 +552,7 @@ class MainApplication(tk.Frame):
 			text = " " + self.get_file_name(file)
 			).grid(row=7, column=3, sticky="W")
 		self.rr_df = pd.read_csv(file)
+		print("RR list uploaded")
 
 
 
@@ -713,10 +730,10 @@ class MainApplication(tk.Frame):
 		# self.teacher_df.to_csv("test_teacher_Df.csv")
 		# self.prox.to_csv("test_prox.csv")
 
-		self.LP_input.to_csv("intermediate_LP_input.csv")
-		self.LP_input = pd.read_csv("intermediate_LP_input.csv")
-		self.teacher_df.to_csv("intermediate_teacher_df.csv")
-		self.teacher_df = pd.read_csv("intermediate_teacher_df.csv")
+		# self.LP_input.to_csv("intermediate_LP_input.csv")
+		# self.LP_input = pd.read_csv("intermediate_LP_input.csv")
+		# self.teacher_df.to_csv("intermediate_teacher_df.csv")
+		# self.teacher_df = pd.read_csv("intermediate_teacher_df.csv")
 
 
 		# test re-index
@@ -733,6 +750,9 @@ class MainApplication(tk.Frame):
 					save_location  = self.optimization_output_directory,
 					rr_df = self.rr_df)
 
+		print(O.S)
+		print(O.Cd)
+		print(O.I_C_dict)
 
 		print("Adding Constraints")
 		O.add_basic_constraints()
@@ -741,7 +761,10 @@ class MainApplication(tk.Frame):
 		O.add_proximity_constraints()
 		O.add_teacher_constraints()
 		O.add_course_constraints()
-		O.add_grade_level_requirements()
+
+		if self.requirements is not None:
+			O.add_grade_level_requirements()
+
 		O.add_room_constraints()
 		O.add_rr_constraints()
 		#O.add_period_constraints() # ONly if Other courses are in input
@@ -750,6 +773,14 @@ class MainApplication(tk.Frame):
 		O.set_objective()
 
 		O.optimize()
+
+		# Check status of solution
+		if O.m.getStatus() == "infeasible":
+			s = "There is no feasible schedule with the given inputs."
+			s+= " Please check the data and try again."
+			messagebox.showinfo("Note", s)
+			return 
+
 
 		O.assign_value_dicts()
 
@@ -773,13 +804,13 @@ class MainApplication(tk.Frame):
 		O.print_grid()
 		O.print_all_student_schedules()
 
-		if not O.m.getStatus() != 'infeasible':
-			O.assign_value_dicts()
-		else:
-			print("Not feasible soltuion")
-			s = "Could not find a solution, please tweak files and try again"
-			messagebox.showinfo("Note", s)
-			raise SystemExit
+		# if not O.m.getStatus() != 'infeasible':
+		# 	O.assign_value_dicts()
+		# else:
+		# 	print("Not feasible soltuion")
+		# 	s = "Could not find a solution, please tweak files and try again"
+		# 	messagebox.showinfo("Note", s)
+		# 	raise SystemExit
 
 
 		print("Pickling solutions")
@@ -790,7 +821,7 @@ class MainApplication(tk.Frame):
 
 		#O.save_grid_no_rooms("test_grid_no_rooms.txt")
 		O.save_grid()
-		O.save_all_student_schedules(rooms=True, show_score=True)
+		O.save_all_student_schedules(rooms=True, show_score=False)
 
 		O.make_hist(save=True)
 		O.plot_score_by_grade(save=True)

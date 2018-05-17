@@ -51,7 +51,8 @@ class SavedConfig():
 				hs_preference_df,
 				ms_preference_df,
 				rr_df,
-				student_dict):
+				student_dict,
+				need_course_num_dict):
 		"""
 		Saves the required filed
 
@@ -83,9 +84,15 @@ class SavedConfig():
 		self.prox = prox
 		self.rr_df = rr_df
 		self.student_dict = student_dict
+		self.need_course_num_dict = need_course_num_dict
 
-		for r in requirements:
-			self.requirements.append(MiniRequirement(r))
+		self.requirements = None # place holder
+		# Check if there are requirements
+		if requirements is not None:
+			# if so, make MiniRequirements (without Tkinter obejcts)
+			# and save them
+			for r in requirements:
+				self.requirements.append(MiniRequirement(r))
 
 
 

@@ -82,18 +82,21 @@ def metadata(HSF, MSF):
     # for i, row in hs_data.iterrows():
     for i in range(hs_data.shape[0]):
         row = hs_data.iloc[i]
-        students[i] = Student(row[1], row[2], row[3], row[4], row[5])
+        #students[i] = Student(row[1], row[2], row[3], row[4], row[5])
+        students[i] = Student(row[0], row[1], row[2], row[3], row[4])
 
     ms_start_index = int(hs_data.shape[0])
     #print("the start index", ms_start_index)
     # for i, row in ms_data.iterrows():
     for i in range(ms_data.shape[0]):
-        print(i)
+        #print(i)
         row = ms_data.iloc[i]
         #print("i is:", i)
         #print("row is:", row)
         # print("saving at key", i + ms_start_index)
-        students[i + ms_start_index] = Student(row[1], row[2], row[3], row[4], row[5])
+        #students[i + ms_start_index] = Student(row[1], row[2], row[3], row[4], row[5])
+        students[i + ms_start_index] = Student(row[0], row[1], row[2], row[3], row[4])
+        print(students[i + ms_start_index])
         
     return students
 
